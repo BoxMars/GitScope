@@ -36,6 +36,13 @@ struct WindowChromeConfigurator: NSViewRepresentable {
 }
 
 /// Subtle gradient + soft light pools used as the backdrop under the glass panels.
+enum TahoeUI {
+    /// Height reserved for the traffic lights when content runs under the title bar.
+    static let titlebarInset: CGFloat = 26
+    /// Glass effects can force the hosting window to become translucent; kept as a switch.
+    static let glassEnabled = true
+}
+
 struct AppBackdrop: View {
     @Environment(\.colorScheme) private var scheme
 
@@ -43,37 +50,30 @@ struct AppBackdrop: View {
         ZStack {
             LinearGradient(
                 colors: scheme == .dark
-                    ? [Color(hex: 0x0E0F12), Color(hex: 0x161821), Color(hex: 0x0B0C0F)]
-                    : [Color(hex: 0xEDF1F7), Color(hex: 0xE4EAF4), Color(hex: 0xF4F5F8)],
+                    ? [Color(hex: 0x101012), Color(hex: 0x18181B), Color(hex: 0x0D0D0F)]
+                    : [Color(hex: 0xF3F3F5), Color(hex: 0xEAEAEE), Color(hex: 0xF6F6F8)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
 
+            // Very soft neutral pools; no colour cast on the glass panels.
             GeometryReader { proxy in
                 let w = proxy.size.width
                 let h = proxy.size.height
                 Circle()
-                    .fill(Color.accentColor.opacity(scheme == .dark ? 0.20 : 0.16))
-                    .frame(width: w * 0.55)
-                    .blur(radius: 120)
-                    .offset(x: -w * 0.18, y: -h * 0.30)
-                Circle()
-                    .fill(Color(hex: 0x8B5CF6).opacity(scheme == .dark ? 0.14 : 0.10))
-                    .frame(width: w * 0.45)
+                    .fill(Color.white.opacity(scheme == .dark ? 0.04 : 0.55))
+                    .frame(width: w * 0.6)
                     .blur(radius: 140)
-                    .offset(x: w * 0.32, y: h * 0.28)
+                    .offset(x: -w * 0.2, y: -h * 0.32)
+                Circle()
+                    .fill(Color.black.opacity(scheme == .dark ? 0.18 : 0.03))
+                    .frame(width: w * 0.5)
+                    .blur(radius: 160)
+                    .offset(x: w * 0.3, y: h * 0.3)
             }
         }
         .ignoresSafeArea()
     }
-}
-
-enum TahoeUI {
-    /// Height reserved for the traffic lights when content runs under the title bar.
-    static let titlebarInset: CGFloat = 26
-    /// Glass effects currently force the hosting window to become translucent.
-    /// Keep a switch so we can fall back to materials if that hurts readability.
-    static let glassEnabled = true
 }
 
 extension View {

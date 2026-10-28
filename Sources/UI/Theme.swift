@@ -44,6 +44,8 @@ enum Theme {
     static let hunkBackground = adaptive(light: 0xEFF4FC, dark: 0x1A2233)
 
     static let selectionBackground = adaptive(light: 0xE3EDFD, dark: 0x24354E)
+    /// Neutral sidebar row selection (Finder-like), independent of the accent colour.
+    static let sidebarSelection = Color.primary.opacity(0.07)
 
     static func adaptive(light: UInt32, dark: UInt32) -> Color {
         Color(nsColor: NSColor(name: nil) { appearance in

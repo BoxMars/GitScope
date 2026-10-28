@@ -133,7 +133,7 @@ private struct RepositoryRow: View {
         .frame(height: 34)
         .background(
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.028) : Color.clear))
+                .fill(isActive ? Theme.sidebarSelection : (hovering ? Color.primary.opacity(0.028) : Color.clear))
                 .padding(.horizontal, 6)
         )
         .contentShape(Rectangle())
@@ -194,7 +194,7 @@ struct SidebarRepoSections: View {
                 .frame(height: 26)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(session.mode == .history && session.filterRef == nil ? Theme.selectionBackground : Color.clear)
+                        .fill(session.mode == .history && session.filterRef == nil ? Theme.sidebarSelection : Color.clear)
                         .padding(.horizontal, 6)
                 )
                 .contentShape(Rectangle())
@@ -225,7 +225,7 @@ struct SidebarRepoSections: View {
                 .frame(height: 26)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(session.mode == .changes ? Theme.selectionBackground : Color.clear)
+                        .fill(session.mode == .changes ? Theme.sidebarSelection : Color.clear)
                         .padding(.horizontal, 6)
                 )
                 .contentShape(Rectangle())
@@ -438,7 +438,7 @@ struct SidebarRow: View {
         .frame(height: 24)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.028) : Color.clear))
+                .fill(isActive ? Theme.sidebarSelection : (hovering ? Color.primary.opacity(0.028) : Color.clear))
                 .padding(.horizontal, 6)
         )
         .contentShape(Rectangle())
