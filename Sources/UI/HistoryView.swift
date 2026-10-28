@@ -219,11 +219,18 @@ struct HistoryListView: View {
                                 .contextMenu { contextMenu(for: commit) }
                         }
                         if session.hasMore {
-                            Button("Load more commits") {
-                                Task { await session.loadMore() }
+                            HStack(spacing: 8) {
+                                ProgressView().controlSize(.mini)
+                                Text("Loading more commits…")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                                Button("Load now") { Task { await session.loadMore() } }
+                                    .buttonStyle(.link)
+                                    .font(.system(size: 10))
                             }
-                            .buttonStyle(.link)
+                            .frame(maxWidth: .infinity)
                             .padding(10)
+                            .onAppear { session.autoLoadMoreIfNeeded() }
                         }
                     }
                     .padding(.horizontal, 4)
@@ -324,7 +331,9 @@ struct HistoryListView: View {
             .help("What do the lines mean?")
             .padding(.horizontal, 2)
 
-            Text("\(session.displayCommits.count)")
+            Text(session.hasMore
+                 ? "\(session.commits.count) / \(session.totalCommitCount)"
+                 : "\(session.displayCommits.count)")
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.tertiary)
         }

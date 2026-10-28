@@ -77,6 +77,13 @@ enum GitRepo {
         return commits
     }
 
+    static func countCommits(at root: String, ref: String?) async -> Int {
+        let refs: [String] = ref.map { [$0] } ?? ["--branches", "--tags", "--remotes"]
+        let result = try? await GitCLI.run(["rev-list", "--count"] + refs, in: root)
+        guard let result, result.ok else { return 0 }
+        return Int(result.trimmed) ?? 0
+    }
+
     static func log(at root: String, limit: Int, path: String) async throws -> [Commit] {
         let pretty = "--pretty=format:%H%x1f%P%x1f%an%x1f%ae%x1f%at%x1f%cn%x1f%ce%x1f%ct%x1f%D%x1f%s%x1f%b%x1e"
         let args = ["-c", "core.quotepath=false", "log", "--date-order", "--max-count=\(limit)", pretty, "--", path]
