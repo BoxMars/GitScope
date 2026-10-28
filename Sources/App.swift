@@ -7,7 +7,7 @@ struct GitScopeApp: App {
     @StateObject private var app = AppModel.shared
 
     init() {
-        UserDefaults.standard.set(1800, forKey: "NSInitialToolTipDelay")
+        UserDefaults.standard.set(1200, forKey: "NSInitialToolTipDelay")
     }
 
     var body: some Scene {
