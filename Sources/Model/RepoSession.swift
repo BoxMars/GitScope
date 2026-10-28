@@ -35,6 +35,20 @@ final class RepoSession: ObservableObject, Identifiable {
     @Published var inspector: Inspector?
     @Published var showRebaseSheet = false
     @Published var showWorktreeSheet = false
+    @Published var ignoreWhitespace = false {
+        didSet { Task { await reloadCurrentDiff() } }
+    }
+    @Published var detailTab: CommitDetailTab = .changes
+    @Published var treeFiles: [String] = []
+    @Published var treeSelection: String?
+    @Published var treeContent: String?
+    @Published var treeIsBinary = false
+
+    enum CommitDetailTab: String, CaseIterable, Identifiable {
+        case changes, tree
+        var id: String { rawValue }
+        var title: String { self == .changes ? "Changes" : "Files" }
+    }
 
     // Filters
     @Published var filterRef: String?
@@ -278,6 +292,11 @@ final class RepoSession: ObservableObject, Identifiable {
             } else {
                 diff = nil
             }
+            if detailTab == .tree {
+                treeFiles = []
+                treeSelection = nil
+                await loadTree()
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -293,7 +312,7 @@ final class RepoSession: ObservableObject, Identifiable {
         isDiffLoading = true
         defer { isDiffLoading = false }
         do {
-            let result = try await GitRepo.diff(forCommit: commit.hash, path: file.path, at: root)
+            let result = try await GitRepo.diff(forCommit: commit.hash, path: file.path, at: root, ignoreWhitespace: ignoreWhitespace)
             if result.isBinary && ImageFile.isImage(file.path) {
                 var oldData: Data?
                 if let parent = commit.parents.first {
@@ -359,6 +378,40 @@ final class RepoSession: ObservableObject, Identifiable {
         let hunk = DiffHunk(header: "@@ conflict — resolve with Ours / Theirs / Mark resolved @@",
                             oldStart: 1, oldCount: lines.count, newStart: 1, newCount: lines.count, lines: lines)
         return FileDiff(path: path, oldPath: nil, hunks: [hunk], isBinary: false, rawText: text)
+    }
+
+    private func reloadCurrentDiff() async {
+        switch selection {
+        case .workingDirectory:
+            if let change = selectedChange { await loadWorkingDiff(for: change) }
+        case .commit:
+            if let file = selectedFile, let commit = selectedCommit {
+                await loadCommitDiff(file, commit: commit)
+            }
+        }
+    }
+
+    // MARK: - Tree
+
+    func loadTree() async {
+        guard case .commit(let hash) = selection else { return }
+        if treeFiles.isEmpty || treeSelection == nil {
+            treeFiles = (try? await GitRepo.treeFiles(at: hash, root: root)) ?? []
+        }
+        if treeSelection == nil { treeSelection = treeFiles.first }
+        if let path = treeSelection { await loadTreeFile(path) }
+    }
+
+    func selectTreeFile(_ path: String) async {
+        treeSelection = path
+        await loadTreeFile(path)
+    }
+
+    private func loadTreeFile(_ path: String) async {
+        guard case .commit(let hash) = selection else { return }
+        let result = try? await GitRepo.fileText(at: path, revision: hash, root: root)
+        treeContent = result?.text
+        treeIsBinary = result?.binary ?? false
     }
 
     // MARK: - Filtering

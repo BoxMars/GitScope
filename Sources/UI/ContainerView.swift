@@ -331,6 +331,19 @@ struct RepoToolbar: View {
             .fixedSize()
 
             Button {
+                session.ignoreWhitespace.toggle()
+            } label: {
+                Text("±w")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .frame(width: 26, height: 24)
+                    .background(session.ignoreWhitespace ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.04),
+                                in: RoundedRectangle(cornerRadius: 5))
+                    .foregroundStyle(session.ignoreWhitespace ? Color.accentColor : Color.primary)
+            }
+            .buttonStyle(.plain)
+            .help("Ignore whitespace changes")
+
+            Button {
                 withAnimation(.easeInOut(duration: 0.15)) {
                     app.diffMode = app.diffMode == .unified ? .sideBySide : .unified
                 }

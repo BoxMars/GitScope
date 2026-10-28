@@ -16,19 +16,37 @@ struct CommitDetailView: View {
             header
             Divider().overlay(Theme.subtleBorder)
             filesHeader
-            if showFiles {
-                fileList
+            if session.detailTab == .tree {
+                treeList
                 Divider().overlay(Theme.subtleBorder)
+                CodeView(text: session.treeContent,
+                         path: session.treeSelection,
+                         isBinary: session.treeIsBinary)
+            } else {
+                if showFiles {
+                    fileList
+                    Divider().overlay(Theme.subtleBorder)
+                }
+                FileDiffView(diff: session.diff,
+                             file: session.selectedFile,
+                             isLoading: session.isDiffLoading,
+                             mode: app.diffMode,
+                             imagePair: session.imagePair)
             }
-            FileDiffView(diff: session.diff,
-                         file: session.selectedFile,
-                         isLoading: session.isDiffLoading,
-                         mode: app.diffMode,
-                         imagePair: session.imagePair)
         }
         .background(Theme.editorBackground)
         .sheet(isPresented: $tagSheet) {
             NewTagSheet(session: session, targetHash: commit.hash)
+        }
+        .onChange(of: session.detailTab) { _, tab in
+            if tab == .tree {
+                Task { await session.loadTree() }
+            }
+        }
+        .onAppear {
+            if session.detailTab == .tree {
+                Task { await session.loadTree() }
+            }
         }
     }
 
@@ -122,10 +140,49 @@ struct CommitDetailView: View {
                 .font(.system(size: 10.5, weight: .medium))
                 .foregroundStyle(Theme.secondaryText)
             Spacer()
+            Picker("", selection: $session.detailTab) {
+                ForEach(RepoSession.CommitDetailTab.allCases) { tab in
+                    Text(tab.title).tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 150)
+            .scaleEffect(0.9)
         }
         .padding(.horizontal, 12)
         .frame(height: 24)
         .background(Theme.toolbarBackground)
+    }
+
+    private var treeList: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(session.treeFiles, id: \.self) { path in
+                    HStack(spacing: 7) {
+                        Image(systemName: "doc.text")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.tertiary)
+                            .frame(width: 12)
+                        Text(path)
+                            .font(.system(size: 11, design: .monospaced))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer(minLength: 4)
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(height: 24)
+                    .background(session.treeSelection == path ? Theme.selectionBackground : Color.clear)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        Task { await session.selectTreeFile(path) }
+                    }
+                }
+            }
+            .padding(.vertical, 2)
+        }
+        .frame(height: min(CGFloat(session.treeFiles.count) * 24 + 6, 150))
+        .background(Theme.contentBackground)
     }
 
     private var fileList: some View {

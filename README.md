@@ -43,6 +43,8 @@ open build/GitScope.app
 - 提交详情：作者、时间、hash、正文、改动文件列表
 - diff 视图：统一 / 并排两种布局、语法高亮、行号
 - 图片 diff（修改前后并排）
+- 忽略空白字符的 diff（工具栏 `±w`）
+- 浏览任一提交的完整文件树并查看文件内容
 - 文件历史、blame、reflog
 - stash 内容查看
 

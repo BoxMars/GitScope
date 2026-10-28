@@ -100,6 +100,18 @@ enum GitRepo {
         return commits
     }
 
+    static func treeFiles(at revision: String, root: String) async throws -> [String] {
+        let out = try await GitCLI.runChecked(["-c", "core.quotepath=false", "ls-tree", "-r", "--name-only", "-z", revision], in: root)
+        return out.components(separatedBy: "\0").filter { !$0.isEmpty }
+    }
+
+    static func fileText(at path: String, revision: String, root: String) async throws -> (text: String, binary: Bool)? {
+        guard let data = try await fileData(at: path, revision: revision, root: root) else { return nil }
+        if data.contains(0) { return ("", true) }
+        guard let text = String(data: data, encoding: .utf8) else { return ("", true) }
+        return (text, false)
+    }
+
     static func fileData(at path: String, revision: String, root: String) async throws -> Data? {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: GitCLI.executable)
@@ -363,14 +375,22 @@ enum GitRepo {
         return changes
     }
 
-    static func diff(forCommit hash: String, path: String, at root: String) async throws -> FileDiff {
+    static func diff(forCommit hash: String, path: String, at root: String, ignoreWhitespace: Bool = false) async throws -> FileDiff {
         let parentOut = try await GitCLI.runChecked(["rev-list", "--parents", "-n", "1", hash], in: root)
         let fields = parentOut.split(whereSeparator: { $0 == " " || $0 == "\n" || $0 == "\r" }).map(String.init)
-        let args: [String]
+        var args: [String]
         if fields.count > 1 {
-            args = ["-c", "core.quotepath=false", "diff", "--no-color", "--no-ext-diff", "-M", "-U3", fields[1], hash, "--", path]
+            args = ["-c", "core.quotepath=false", "diff", "--no-color", "--no-ext-diff", "-M", "-U3"]
         } else {
-            args = ["-c", "core.quotepath=false", "show", "--no-color", "--no-ext-diff", "-M", "-U3", "--format=", hash, "--", path]
+            args = ["-c", "core.quotepath=false", "show", "--no-color", "--no-ext-diff", "-M", "-U3", "--format="]
+        }
+        if ignoreWhitespace { args.append("-w") }
+        if !fields.isEmpty {
+            if fields.count > 1 {
+                args.append(contentsOf: [fields[1], hash, "--", path])
+            } else {
+                args.append(contentsOf: [hash, "--", path])
+            }
         }
         let out = try await GitCLI.runChecked(args, in: root)
         var parsed = DiffParser.parse(out)
@@ -381,8 +401,9 @@ enum GitRepo {
         return parsed[0]
     }
 
-    static func diffWorking(path: String, staged: Bool, at root: String) async throws -> FileDiff {
+    static func diffWorking(path: String, staged: Bool, at root: String, ignoreWhitespace: Bool = false) async throws -> FileDiff {
         var args = ["-c", "core.quotepath=false", "diff", "--no-color", "--no-ext-diff", "-M", "-U3"]
+        if ignoreWhitespace { args.append("-w") }
         if staged { args.append("--cached") }
         args.append(contentsOf: ["--", path])
         let out = try await GitCLI.runChecked(args, in: root)
