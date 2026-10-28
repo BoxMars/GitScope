@@ -64,7 +64,6 @@ final class RepoSession: ObservableObject, Identifiable {
     @Published var searchText = ""
     @Published var logLimit = 2000
     @Published var hasMore = false
-    @Published var totalCommitCount = 0
 
     // Working copy selection
     @Published var selectedChange: FileChange?
@@ -193,10 +192,9 @@ final class RepoSession: ObservableObject, Identifiable {
             async let submodulesTask = GitRepo.submodules(at: root)
             async let remotesTask = GitRepo.remoteNames(at: root)
             async let logTask = GitRepo.log(at: root, limit: logLimit + 1, ref: filterRef)
-            async let countTask = GitRepo.countCommits(at: root, ref: filterRef)
 
-            let (info, branches, tags, stashes, worktrees, status, remotes, log, submodules, total) =
-                try await (infoTask, branchesTask, tagsTask, stashesTask, worktreesTask, statusTask, remotesTask, logTask, submodulesTask, countTask)
+            let (info, branches, tags, stashes, worktrees, status, remotes, log, submodules) =
+                try await (infoTask, branchesTask, tagsTask, stashesTask, worktreesTask, statusTask, remotesTask, logTask, submodulesTask)
 
             self.info = info
             self.branches = branches
@@ -208,7 +206,6 @@ final class RepoSession: ObservableObject, Identifiable {
             self.submodules = submodules.map { Submodule(path: $0.path, hash: $0.hash, status: $0.status) }
             self.operation = await GitRepo.operationState(at: root)
             self.hasMore = log.count > logLimit
-            self.totalCommitCount = total
             var loaded = Array(log.prefix(logLimit))
             applyRefKinds(&loaded)
             self.commits = loaded

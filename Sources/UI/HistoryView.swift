@@ -203,7 +203,7 @@ struct HistoryListView: View {
                 ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        ForEach(session.displayCommits) { commit in
+                        ForEach(Array(session.displayCommits.enumerated()), id: \.element.id) { index, commit in
                             CommitRowView(commit: commit,
                                           row: session.graph.rows[commit.hash],
                                           laneCount: session.graph.laneCount,
@@ -216,6 +216,12 @@ struct HistoryListView: View {
                                     Task { await session.select(commit: commit) }
                                 }
                                 .id(commit.hash)
+                                .onAppear {
+                                    if session.searchText.isEmpty,
+                                       index >= session.commits.count - 30 {
+                                        session.autoLoadMoreIfNeeded()
+                                    }
+                                }
                                 .contextMenu { contextMenu(for: commit) }
                         }
                         if session.hasMore {
@@ -331,11 +337,11 @@ struct HistoryListView: View {
             .help("What do the lines mean?")
             .padding(.horizontal, 2)
 
-            Text(session.hasMore
-                 ? "\(session.commits.count) / \(session.totalCommitCount)"
-                 : "\(session.displayCommits.count)")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(.tertiary)
+            if !session.searchText.isEmpty || session.filterRef != nil {
+                Text("\(session.displayCommits.count)")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+            }
         }
         .padding(.horizontal, 12)
         .frame(height: 40)
