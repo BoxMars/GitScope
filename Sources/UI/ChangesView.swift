@@ -8,8 +8,6 @@ struct ChangesListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            Divider().overlay(Theme.subtleBorder)
             if let operation = session.operation {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -64,32 +62,6 @@ struct ChangesListView: View {
         .background(Theme.contentBackground)
     }
 
-    private var header: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "square.and.pencil")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-            Text("Working Directory")
-                .font(.system(size: 12, weight: .semibold))
-            if !session.status.changes.isEmpty {
-                Text("\(session.status.changes.count)")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(Color.accentColor.opacity(0.15), in: Capsule())
-            }
-            Spacer()
-            if let branch = session.status.branch {
-                Text(branch)
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-        }
-        .padding(.horizontal, 10)
-        .frame(height: 32)
-        .background(Theme.toolbarBackground)
-    }
 
     private func groupHeader(_ title: String, count: Int, staged: Bool) -> some View {
         HStack(spacing: 5) {

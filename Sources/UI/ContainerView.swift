@@ -104,6 +104,39 @@ struct TabBarView: View {
 
 }
 
+struct RepoPaneSwitcher: View {
+    @ObservedObject var session: RepoSession
+
+    private var changeCount: Int { session.status.changes.count }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Picker("", selection: Binding(
+                get: { session.mode },
+                set: { session.setMode($0) }
+            )) {
+                Text("History").tag(RepoSession.PaneMode.history)
+                Text(changeCount > 0 ? "Changes (\(changeCount))" : "Changes").tag(RepoSession.PaneMode.changes)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 190)
+
+            Spacer()
+
+            if session.mode == .changes, let branch = session.status.branch {
+                Text(branch)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 34)
+        .background(Theme.toolbarBackground)
+    }
+}
+
 struct TabItemView: View {
     @EnvironmentObject var app: AppModel
     var path: String
@@ -165,8 +198,12 @@ struct RepoView: View {
             RepoToolbar(session: session)
             Divider().overlay(Theme.border)
             HSplitView {
-                leftPane
-                    .frame(minWidth: 380, idealWidth: 470, maxWidth: 700)
+                VStack(spacing: 0) {
+                    RepoPaneSwitcher(session: session)
+                    Divider().overlay(Theme.subtleBorder)
+                    leftPane
+                }
+                .frame(minWidth: 380, idealWidth: 470, maxWidth: 700)
                 detailPane
                     .frame(minWidth: 380, maxWidth: .infinity)
             }
@@ -191,16 +228,17 @@ struct RepoView: View {
 
     @ViewBuilder
     private var leftPane: some View {
-        if case .workingDirectory = session.selection {
+        switch session.mode {
+        case .changes:
             ChangesListView(session: session)
-        } else {
+        case .history:
             HistoryListView(session: session)
         }
     }
 
     @ViewBuilder
     private var detailPane: some View {
-        if case .workingDirectory = session.selection {
+        if session.mode == .changes {
             FileDiffView(diff: session.diff,
                          file: session.selectedChange,
                          isLoading: session.isDiffLoading,

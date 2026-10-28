@@ -159,6 +159,32 @@ struct SidebarRepoSections: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
+                session.setMode(.history)
+                if session.filterRef != nil {
+                    Task { await session.setFilterRef(nil) }
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 10))
+                        .frame(width: 14)
+                        .foregroundStyle(.secondary)
+                    Text("All Commits")
+                        .font(.system(size: 11.5))
+                    Spacer()
+                    Text("\(session.commits.count)")
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity)
+                .frame(height: 26)
+                .background(session.mode == .history && session.filterRef == nil ? Theme.selectionBackground : Color.clear)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Button {
                 session.selectWorkingDirectory()
             } label: {
                 HStack(spacing: 7) {
@@ -178,6 +204,7 @@ struct SidebarRepoSections: View {
                     }
                 }
                 .padding(.horizontal, 10)
+                .frame(maxWidth: .infinity)
                 .frame(height: 26)
                 .background(session.selection == .workingDirectory ? Theme.selectionBackground : Color.clear)
                 .contentShape(Rectangle())
@@ -193,6 +220,7 @@ struct SidebarRepoSections: View {
                                isCurrent: branch.isCurrent,
                                accent: branch.isCurrent ? Color.accentColor : Theme.secondaryText)
                         .onTapGesture {
+                            session.setMode(.history)
                             Task { await session.setFilterRef(branch.name) }
                         }
                         .contextMenu {
@@ -219,6 +247,7 @@ struct SidebarRepoSections: View {
                                isCurrent: false,
                                accent: Theme.secondaryText)
                         .onTapGesture {
+                            session.setMode(.history)
                             Task { await session.setFilterRef(branch.name) }
                         }
                         .contextMenu {

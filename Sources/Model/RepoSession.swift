@@ -24,6 +24,14 @@ final class RepoSession: ObservableObject, Identifiable {
     @Published var busyMessage: String?
     @Published var errorMessage: String?
 
+    // Layout mode: history list vs working directory changes.
+    enum PaneMode: String {
+        case history
+        case changes
+    }
+
+    @Published var mode: PaneMode = .history
+
     // Selection
     @Published var selection: HistorySelection = .workingDirectory
     @Published var selectedCommit: Commit?
@@ -61,8 +69,21 @@ final class RepoSession: ObservableObject, Identifiable {
 
     private var lastRefresh = Date.distantPast
     private var didRestoreSelection = false
+    private var lastCommitHash: String?
 
     static let selectionKey = "gitscope.lastSelections"
+    static let modeKey = "gitscope.paneModes"
+
+    static func storedMode(for root: String) -> PaneMode? {
+        guard let raw = (UserDefaults.standard.dictionary(forKey: modeKey) as? [String: String])?[root] else { return nil }
+        return PaneMode(rawValue: raw)
+    }
+
+    static func storeMode(_ mode: PaneMode, for root: String) {
+        var dict = (UserDefaults.standard.dictionary(forKey: modeKey) as? [String: String]) ?? [:]
+        dict[root] = mode.rawValue
+        UserDefaults.standard.set(dict, forKey: modeKey)
+    }
 
     static func storedSelection(for root: String) -> String? {
         (UserDefaults.standard.dictionary(forKey: selectionKey) as? [String: String])?[root]
@@ -192,9 +213,14 @@ final class RepoSession: ObservableObject, Identifiable {
             resyncSelection()
             if !didRestoreSelection {
                 didRestoreSelection = true
-                if let stored = Self.storedSelection(for: root),
-                   let commit = loaded.first(where: { $0.hash == stored }) {
+                if Self.storedMode(for: root) == .changes {
+                    selectWorkingDirectory()
+                } else if let stored = Self.storedSelection(for: root),
+                          let commit = loaded.first(where: { $0.hash == stored }) {
                     Task { await self.select(commit: commit) }
+                } else if let newest = loaded.first {
+                    // First open: land on history with the latest commit selected.
+                    Task { await self.select(commit: newest) }
                 }
             }
         } catch {
@@ -254,8 +280,26 @@ final class RepoSession: ObservableObject, Identifiable {
 
     // MARK: - Selection handling
 
+    func setMode(_ newMode: PaneMode) {
+        guard mode != newMode else { return }
+        mode = newMode
+        switch newMode {
+        case .changes:
+            selectWorkingDirectory()
+        case .history:
+            if case .commit = selection { return }
+            if let hash = lastCommitHash, let commit = commits.first(where: { $0.hash == hash }) {
+                Task { await select(commit: commit) }
+            } else if let first = commits.first {
+                Task { await select(commit: first) }
+            }
+        }
+    }
+
     func selectWorkingDirectory() {
         Self.storeSelection(nil, for: root)
+        Self.storeMode(.changes, for: root)
+        mode = .changes
         selection = .workingDirectory
         selectedCommit = nil
         commitFiles = []
@@ -268,6 +312,9 @@ final class RepoSession: ObservableObject, Identifiable {
 
     func select(commit: Commit) async {
         Self.storeSelection(commit.hash, for: root)
+        Self.storeMode(.history, for: root)
+        lastCommitHash = commit.hash
+        mode = .history
         selection = .commit(commit.hash)
         selectedCommit = commit
         selectedFile = nil
