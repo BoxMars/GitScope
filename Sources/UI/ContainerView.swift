@@ -161,16 +161,11 @@ struct RepoToolbar: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(session.ref.name)
-                    .font(.system(size: 12.5, weight: .semibold))
-                    .lineLimit(1)
-                Text(abbreviatedPath)
-                    .font(.system(size: 9.5))
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
-                    .truncationMode(.head)
-            }
+            Text(abbreviatedPath)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
 
             branchMenu
 
@@ -294,15 +289,15 @@ struct RepoToolbar: View {
                     Circle().fill(Color(hex: 0xF59E0B)).frame(width: 4, height: 4)
                 }
             }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 4)
-            .background(Theme.contentBackground, in: Capsule())
-            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.07), lineWidth: 0.8))
             .foregroundStyle(Color.accentColor)
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
         .fixedSize()
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(Theme.contentBackground, in: Capsule())
+        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8))
     }
 }
 
