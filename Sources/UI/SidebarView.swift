@@ -28,7 +28,6 @@ struct SidebarView: View {
             Divider().overlay(Theme.subtleBorder)
             footer
         }
-        .background(Theme.sidebarBackground)
     }
 
     private var header: some View {
@@ -122,7 +121,11 @@ private struct RepositoryRow: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 34)
-        .background(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.04) : Color.clear))
+        .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.045) : Color.clear))
+                .padding(.horizontal, 6)
+        )
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .contextMenu {
@@ -179,7 +182,11 @@ struct SidebarRepoSections: View {
                 .padding(.horizontal, 10)
                 .frame(maxWidth: .infinity)
                 .frame(height: 26)
-                .background(session.mode == .history && session.filterRef == nil ? Theme.selectionBackground : Color.clear)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(session.mode == .history && session.filterRef == nil ? Theme.selectionBackground : Color.clear)
+                        .padding(.horizontal, 6)
+                )
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -206,7 +213,11 @@ struct SidebarRepoSections: View {
                 .padding(.horizontal, 10)
                 .frame(maxWidth: .infinity)
                 .frame(height: 26)
-                .background(session.selection == .workingDirectory ? Theme.selectionBackground : Color.clear)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(session.selection == .workingDirectory ? Theme.selectionBackground : Color.clear)
+                        .padding(.horizontal, 6)
+                )
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -291,7 +302,7 @@ struct SidebarRepoSections: View {
                 ForEach(session.stashes) { stash in
                     SidebarRow(icon: "tray.and.arrow.down",
                                title: stash.message,
-                               detail: "stash@{\(stash.index)}",
+                               detail: nil,
                                isActive: false,
                                isCurrent: false,
                                accent: Theme.secondaryText)
@@ -415,7 +426,11 @@ struct SidebarRow: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 24)
-        .background(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.04) : Color.clear))
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.045) : Color.clear))
+                .padding(.horizontal, 6)
+        )
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
     }
@@ -459,7 +474,7 @@ struct SidebarSection<Content: View>: View {
         }
         .padding(.top, 4)
         .onChange(of: count) { _, newValue in
-            if !autoCollapsed && newValue > 30 {
+            if !autoCollapsed && newValue > 15 {
                 expanded = false
                 autoCollapsed = true
             }

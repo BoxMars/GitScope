@@ -32,7 +32,9 @@ struct CommitDetailView: View {
                              isLoading: session.isDiffLoading,
                              mode: app.diffMode,
                              imagePair: session.imagePair,
-                             onModeChange: { app.diffMode = $0 })
+                             onModeChange: { app.diffMode = $0 },
+                             ignoreWhitespace: session.ignoreWhitespace,
+                             onToggleWhitespace: { session.ignoreWhitespace.toggle() })
             }
         }
         .background(Theme.editorBackground)
@@ -148,8 +150,8 @@ struct CommitDetailView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 150)
-            .scaleEffect(0.9)
+            .frame(width: 142)
+            .scaleEffect(0.82)
         }
         .padding(.horizontal, 12)
         .frame(height: 24)
@@ -218,7 +220,11 @@ struct CommitDetailView: View {
         }
         .padding(.horizontal, 12)
         .frame(height: 24)
-        .background(session.selectedFile?.path == file.path ? Theme.selectionBackground : Color.clear)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(session.selectedFile?.path == file.path ? Theme.selectionBackground : Color.clear)
+                .padding(.horizontal, 6)
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             Task { await session.selectCommitFile(file) }

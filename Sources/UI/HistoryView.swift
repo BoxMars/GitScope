@@ -129,7 +129,7 @@ struct CommitRowView: View {
     var isHighlighted: Bool
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             if let row {
                 GraphCell(row: row, isMerge: commit.isMerge, laneCount: laneCount, height: Theme.commitRowHeight)
             }
@@ -220,6 +220,7 @@ struct HistoryListView: View {
                     .padding(.vertical, 3)
                 }
                 .background(Theme.contentBackground)
+                .softTopEdge()
                 .onChange(of: session.selection) { _, newValue in
                     if case .commit(let hash) = newValue {
                         withAnimation(.easeInOut(duration: 0.15)) {
@@ -294,6 +295,7 @@ struct HistoryListView: View {
             }
             .buttonStyle(.plain)
             .help("What do the lines mean?")
+            .padding(.horizontal, 2)
             Text("\(session.displayCommits.count)")
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.tertiary)

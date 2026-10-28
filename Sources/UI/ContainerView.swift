@@ -5,24 +5,38 @@ struct MainView: View {
     @EnvironmentObject var app: AppModel
 
     var body: some View {
-        HStack(spacing: 0) {
-            if app.showSidebar {
-                SidebarView()
-                    .frame(width: Theme.sidebarWidth)
-                Divider().overlay(Theme.border)
-            }
-            VStack(spacing: 0) {
-                TabBarView()
-                Divider().overlay(Theme.border)
-                if let session = app.activeSession {
-                    RepoView(session: session)
-                } else {
-                    WelcomeView()
+        ZStack {
+            AppBackdrop()
+
+            HStack(spacing: 10) {
+                if app.showSidebar {
+                    SidebarView()
+                        .frame(width: Theme.sidebarWidth)
+                        .glassPanel(cornerRadius: 16)
                 }
+
+                VStack(spacing: 0) {
+                    TabBarView()
+                    Divider().overlay(Theme.border)
+                    if let session = app.activeSession {
+                        RepoView(session: session)
+                    } else {
+                        WelcomeView()
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Theme.contentBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8)
+                )
+                .shadow(color: .black.opacity(0.12), radius: 14, y: 4)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Theme.contentBackground)
+            .padding(10)
         }
+        .background(WindowChromeConfigurator(appearance: app.appearance))
+        .preferredColorScheme(app.appearance.colorScheme)
         .frame(minWidth: 1060, minHeight: 680)
         .sheet(isPresented: $app.showCloneSheet) {
             CloneSheet(app: app)
@@ -166,7 +180,7 @@ struct TabItemView: View {
             }
         }
         .padding(.horizontal, 9)
-        .frame(height: 24)
+        .frame(height: 28)
         .frame(minWidth: 90, maxWidth: 170)
         .background(isActive ? Theme.contentBackground : (hovering ? Color.primary.opacity(0.04) : Color.clear),
                     in: RoundedRectangle(cornerRadius: 5))
@@ -209,7 +223,6 @@ struct RepoView: View {
             }
         }
         .background(InspectorSheets(session: session))
-        .navigationTitle(session.ref.name)
         .sheet(isPresented: $session.showRebaseSheet) {
             InteractiveRebaseSheet(session: session)
         }
@@ -265,7 +278,9 @@ struct RepoView: View {
                              guard let change = session.selectedChange else { return }
                              Task { await session.discard(change) }
                          },
-                         onModeChange: { app.diffMode = $0 })
+                         onModeChange: { app.diffMode = $0 },
+                         ignoreWhitespace: session.ignoreWhitespace,
+                         onToggleWhitespace: { session.ignoreWhitespace.toggle() })
         } else if let commit = session.selectedCommit {
             CommitDetailView(session: session, commit: commit)
         } else {
@@ -331,7 +346,7 @@ struct RepoToolbar: View {
                 }
             }
             .padding(.horizontal, 2)
-            .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+            .glassChip(cornerRadius: 7)
 
             ToolbarButton(icon: "arrow.clockwise", help: "Refresh (⌘R)") {
                 Task { await session.refresh(force: true) }
@@ -368,19 +383,6 @@ struct RepoToolbar: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-
-            Button {
-                session.ignoreWhitespace.toggle()
-            } label: {
-                Text("±w")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .frame(width: 26, height: 24)
-                    .background(session.ignoreWhitespace ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.04),
-                                in: RoundedRectangle(cornerRadius: 5))
-                    .foregroundStyle(session.ignoreWhitespace ? Color.accentColor : Color.primary)
-            }
-            .buttonStyle(.plain)
-            .help("Ignore whitespace changes")
 
         }
         .padding(.horizontal, 12)
@@ -427,9 +429,11 @@ struct RepoToolbar: View {
                     Circle().fill(Color(hex: 0xF59E0B)).frame(width: 4, height: 4)
                 }
             }
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(Color.accentColor.opacity(0.10), in: Capsule())
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .glassChip(cornerRadius: 9)
+            .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .strokeBorder(Color.accentColor.opacity(0.18), lineWidth: 0.8))
             .foregroundStyle(Color.accentColor)
         }
         .menuStyle(.borderlessButton)
@@ -513,6 +517,18 @@ struct SettingsSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Preferences").font(.system(size: 15, weight: .semibold))
+
+            HStack {
+                Text("Appearance").font(.system(size: 12))
+                Spacer()
+                Picker("", selection: $app.appearance) {
+                    ForEach(AppModel.Appearance.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .labelsHidden()
+                .frame(width: 160)
+            }
 
             HStack {
                 Text("Default diff layout").font(.system(size: 12))

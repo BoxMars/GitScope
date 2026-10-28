@@ -55,6 +55,7 @@ struct ChangesListView: View {
                     }
                     .padding(.vertical, 4)
                 }
+                .softTopEdge()
             }
             Divider().overlay(Theme.subtleBorder)
             composer

@@ -16,6 +16,20 @@ final class AppModel: ObservableObject {
     @Published var showingSettings = false
     @Published var diffMode: DiffMode = .unified
     @Published var showSidebar = true
+    @Published var appearance: Appearance = .system
+
+    enum Appearance: String, CaseIterable, Identifiable {
+        case system, light, dark
+        var id: String { rawValue }
+        var title: String { rawValue.capitalized }
+        var colorScheme: ColorScheme? {
+            switch self {
+            case .system: return nil
+            case .light: return .light
+            case .dark: return .dark
+            }
+        }
+    }
 
     enum DiffMode: String, CaseIterable, Identifiable {
         case unified, sideBySide
@@ -42,6 +56,7 @@ final class AppModel: ObservableObject {
         static let active = "gitscope.active"
         static let diffMode = "gitscope.diffMode"
         static let showSidebar = "gitscope.showSidebar"
+        static let appearance = "gitscope.appearance"
     }
 
     private func loadPersisted() {
@@ -58,6 +73,9 @@ final class AppModel: ObservableObject {
         if defaults.object(forKey: Keys.showSidebar) != nil {
             showSidebar = defaults.bool(forKey: Keys.showSidebar)
         }
+        if let raw = defaults.string(forKey: Keys.appearance), let value = Appearance(rawValue: raw) {
+            appearance = value
+        }
         for repo in repositories where sessions[repo.path] == nil {
             sessions[repo.path] = RepoSession(ref: repo)
         }
@@ -72,6 +90,7 @@ final class AppModel: ObservableObject {
         defaults.set(activePath, forKey: Keys.active)
         defaults.set(diffMode.rawValue, forKey: Keys.diffMode)
         defaults.set(showSidebar, forKey: Keys.showSidebar)
+        defaults.set(appearance.rawValue, forKey: Keys.appearance)
     }
 
     private func restoreTabs() {

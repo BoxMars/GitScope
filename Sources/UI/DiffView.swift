@@ -14,6 +14,8 @@ struct FileDiffView: View {
     var onUnstageFile: (() -> Void)? = nil
     var onDiscardFile: (() -> Void)? = nil
     var onModeChange: ((AppModel.DiffMode) -> Void)? = nil
+    var ignoreWhitespace: Bool = false
+    var onToggleWhitespace: (() -> Void)? = nil
 
     private var language: String {
         SyntaxHighlighter.family(for: file?.path ?? diff?.path ?? "")
@@ -61,6 +63,21 @@ struct FileDiffView: View {
                     Text("-\(diff.hunks.reduce(0) { $0 + $1.lines.filter { $0.kind == .removed }.count })")
                         .font(.system(size: 10, weight: .semibold, design: .monospaced))
                         .foregroundStyle(Color(hex: 0xDC2626))
+                }
+
+                if let onToggleWhitespace {
+                    Button(action: onToggleWhitespace) {
+                        Text("±w")
+                            .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                            .frame(width: 24, height: 18)
+                            .background(ignoreWhitespace ? Color.accentColor.opacity(0.18) : Color.clear,
+                                        in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                            .foregroundStyle(ignoreWhitespace ? Color.accentColor : Color.secondary)
+                            .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                .strokeBorder(Color.primary.opacity(0.10), lineWidth: 0.6))
+                    }
+                    .buttonStyle(.plain)
+                    .help("Ignore whitespace changes")
                 }
 
                 if let onModeChange {
@@ -197,6 +214,7 @@ private struct DiffBody: View {
             .padding(.vertical, 2)
         }
         .background(Theme.editorBackground)
+        .softTopEdge()
     }
 
     @ViewBuilder
@@ -277,6 +295,7 @@ private struct UnifiedLineRow: View {
             Text(SyntaxColors.attributed(line.text.isEmpty ? " " : line.text, family: language))
                 .lineLimit(1)
                 .truncationMode(.tail)
+                .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.trailing, 8)
         }
@@ -328,6 +347,7 @@ private struct SideBySideRowView: View {
             Text(text.map { SyntaxColors.attributed($0.isEmpty ? " " : $0, family: language) } ?? AttributedString(""))
                 .lineLimit(1)
                 .truncationMode(.tail)
+                .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.trailing, 6)
         }
