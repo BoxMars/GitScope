@@ -8,15 +8,17 @@ struct MainView: View {
         ZStack {
             AppBackdrop()
 
-            HStack(spacing: 10) {
+            HStack(spacing: 0) {
                 if app.showSidebar {
                     SidebarView()
                         .frame(width: Theme.sidebarWidth)
-                        .glassPanel(cornerRadius: 18)
+                        .background(.regularMaterial)
+                        .overlay(alignment: .trailing) {
+                            Rectangle().fill(Theme.border).frame(width: 1)
+                        }
                 }
 
-                VStack(spacing: 8) {
-                    TabBarView()
+                VStack(spacing: 0) {
                     if let session = app.activeSession {
                         RepoView(session: session)
                     } else {
@@ -25,11 +27,10 @@ struct MainView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(10)
             }
-            .padding(10)
-            .padding(.top, 0)
+            .ignoresSafeArea(.container, edges: .top)
         }
-        .ignoresSafeArea(.container, edges: .top)
         .background(WindowChromeConfigurator(appearance: app.appearance))
         .preferredColorScheme(app.appearance.colorScheme)
         .frame(minWidth: 1060, minHeight: 680)
@@ -70,134 +71,6 @@ struct MainView: View {
     }
 }
 
-struct TabBarView: View {
-    @EnvironmentObject var app: AppModel
-    @State private var hoveredPath: String?
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 1) {
-                    ForEach(app.tabs, id: \.self) { path in
-                        if let session = app.sessions[path] {
-                            TabItemView(path: path,
-                                        name: app.repositories.first(where: { $0.path == path })?.name
-                                            ?? (path as NSString).lastPathComponent,
-                                        isActive: app.activePath == path,
-                                        session: session)
-                        }
-                    }
-                }
-                .padding(.horizontal, 4)
-            }
-            Spacer(minLength: 0)
-                .contentShape(Rectangle())
-                .windowDragArea()
-            Menu {
-                ForEach(app.repositories) { repo in
-                    Button(repo.name) { app.open(path: repo.path) }
-                }
-                Divider()
-                Button("Add repository…") { app.openRepositoryPanel() }
-            } label: {
-                Image(systemName: "plus")
-                    .font(.system(size: 10, weight: .semibold))
-                    .frame(width: 24, height: 24)
-            }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .frame(width: 28)
-            .padding(.trailing, 6)
-        }
-        .frame(height: 30)
-        .background(Theme.toolbarBackground)
-    }
-
-}
-
-struct RepoPaneSwitcher: View {
-    @ObservedObject var session: RepoSession
-
-    private var changeCount: Int { session.status.changes.count }
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Picker("", selection: Binding(
-                get: { session.mode },
-                set: { session.setMode($0) }
-            )) {
-                Text("History").tag(RepoSession.PaneMode.history)
-                Text(changeCount > 0 ? "Changes (\(changeCount))" : "Changes").tag(RepoSession.PaneMode.changes)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: 190)
-
-            Spacer()
-
-            if session.mode == .changes, let branch = session.status.branch {
-                Text(branch)
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
-            }
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 40)
-    }
-}
-
-struct TabItemView: View {
-    @EnvironmentObject var app: AppModel
-    var path: String
-    var name: String
-    var isActive: Bool
-    @ObservedObject var session: RepoSession
-    @State private var hovering = false
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(session.isDirty ? Color(hex: 0xF59E0B) : Color.clear)
-                .frame(width: 5, height: 5)
-            Text(name)
-                .font(.system(size: 11, weight: isActive ? .medium : .regular))
-                .lineLimit(1)
-                .truncationMode(.middle)
-            if hovering || isActive {
-                Button {
-                    app.closeTab(path)
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 7, weight: .bold))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.horizontal, 9)
-        .frame(height: 28)
-        .frame(minWidth: 90, maxWidth: 170)
-        .background(isActive ? Theme.contentBackground : (hovering ? Color.primary.opacity(0.05) : Color.clear),
-                    in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .strokeBorder(isActive ? Color.primary.opacity(0.07) : Color.clear, lineWidth: 0.8)
-        )
-        .contentShape(Rectangle())
-        .onHover { hovering = $0 }
-        .onTapGesture { app.activate(path) }
-        .contextMenu {
-            Button("Close tab") { app.closeTab(path) }
-            Button("Reveal in Finder") {
-                NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: path)
-            }
-            Divider()
-            Button("Remove from GitScope", role: .destructive) { app.removeRepository(path) }
-        }
-    }
-}
-
 struct RepoView: View {
     @EnvironmentObject var app: AppModel
     @ObservedObject var session: RepoSession
@@ -207,12 +80,8 @@ struct RepoView: View {
             RepoToolbar(session: session)
 
             CanvasSplitView(initialWidth: 520) {
-                VStack(spacing: 0) {
-                    RepoPaneSwitcher(session: session)
-                    Divider().overlay(Theme.subtleBorder)
-                    leftPane
-                }
-                .cardBackground()
+                leftPane
+                    .cardBackground()
             } right: {
                 detailPane
                     .cardBackground()
