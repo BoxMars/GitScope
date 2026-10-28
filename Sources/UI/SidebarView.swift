@@ -112,12 +112,13 @@ private struct RepositoryRow: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(repo.name)
                     .font(.system(size: 12, weight: isActive ? .medium : .regular))
+                    .foregroundStyle(isActive ? Color.white : Color.primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let branch = session.status.branch ?? session.currentBranch?.name {
                     Text(branch)
-                        .font(.system(size: 9.5))
-                        .foregroundStyle(.tertiary)
+                        .font(.system(size: 10))
+                        .foregroundStyle(isActive ? Color.white.opacity(0.78) : Theme.secondaryText)
                         .lineLimit(1)
                 }
             }
