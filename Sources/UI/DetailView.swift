@@ -138,6 +138,7 @@ struct CommitDetailView: View {
             }
             .buttonStyle(.plain)
             .frame(width: 10)
+            .help(showFiles ? "Hide changed files" : "Show changed files")
 
             Text("\(session.commitFiles.count) file\(session.commitFiles.count == 1 ? "" : "s") changed")
                 .font(.system(size: 10.5, weight: .medium))

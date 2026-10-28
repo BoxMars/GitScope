@@ -128,6 +128,7 @@ struct InteractiveRebaseSheet: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(index == 0)
+                .help("Move up")
                 Button { move(index, by: 1) } label: {
                     Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
                         .frame(width: 14, height: 10)
@@ -135,6 +136,7 @@ struct InteractiveRebaseSheet: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(index == steps.count - 1)
+                .help("Move down")
             }
             .foregroundStyle(.secondary)
             .frame(width: 18)

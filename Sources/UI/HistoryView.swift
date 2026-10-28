@@ -33,6 +33,7 @@ struct GraphLegend: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.tertiary)
+                    .help("Close legend")
                 }
             }
             row(color: Theme.graphColor(0), text: "每条竖线是一条提交链；同一条线上的圆点，后一个是前一个的父提交。")
@@ -302,6 +303,7 @@ struct HistoryListView: View {
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
+                .help("Clear search")
             }
 
             if let ref = session.filterRef {
@@ -314,6 +316,7 @@ struct HistoryListView: View {
                         Image(systemName: "xmark").font(.system(size: 8))
                     }
                     .buttonStyle(.plain)
+                    .help("Clear branch filter")
                 }
                 .foregroundStyle(Theme.accent)
                 .padding(.horizontal, 6)

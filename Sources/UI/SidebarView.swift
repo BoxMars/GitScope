@@ -85,6 +85,7 @@ struct SidebarView: View {
                 Image(systemName: "gearshape").font(.system(size: 11))
             }
             .buttonStyle(.plain)
+            .help("Settings")
         }
         .foregroundStyle(.secondary)
         .padding(.horizontal, 12)
