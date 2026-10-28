@@ -266,6 +266,9 @@ struct SettingsSheet: View {
             }
 
             HStack {
+                Text("GitScope \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"))")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
                 Spacer()
                 Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
             }
