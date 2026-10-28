@@ -34,7 +34,9 @@ struct MainView: View {
                 .shadow(color: .black.opacity(0.12), radius: 14, y: 4)
             }
             .padding(10)
+            .padding(.top, 0)
         }
+        .ignoresSafeArea(.container, edges: .top)
         .background(WindowChromeConfigurator(appearance: app.appearance))
         .preferredColorScheme(app.appearance.colorScheme)
         .frame(minWidth: 1060, minHeight: 680)
@@ -96,6 +98,8 @@ struct TabBarView: View {
                 .padding(.horizontal, 4)
             }
             Spacer(minLength: 0)
+                .contentShape(Rectangle())
+                .windowDragArea()
             Menu {
                 ForEach(app.repositories) { repo in
                     Button(repo.name) { app.open(path: repo.path) }

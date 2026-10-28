@@ -14,6 +14,7 @@ struct GitScopeApp: App {
         }
         .defaultSize(width: 1440, height: 880)
         .defaultPosition(.center)
+        .windowStyle(.hiddenTitleBar)
         .commands {
             AppCommands(app: app)
         }

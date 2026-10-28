@@ -11,8 +11,9 @@ struct WindowChromeConfigurator: NSViewRepresentable {
         DispatchQueue.main.async {
             guard let window = view.window else { return }
             window.title = "GitScope"
-            window.titlebarAppearsTransparent = false
-            window.styleMask.remove(.fullSizeContentView)
+            window.titleVisibility = .hidden
+            window.titlebarAppearsTransparent = true
+            window.styleMask.insert(.fullSizeContentView)
             window.isOpaque = true
             window.backgroundColor = .windowBackgroundColor
             Self.apply(appearance, to: window)
@@ -76,6 +77,16 @@ enum TahoeUI {
 }
 
 extension View {
+    /// Makes a background strip behave like the window title bar.
+    @ViewBuilder
+    func windowDragArea() -> some View {
+        if #available(macOS 15.0, *) {
+            self.gesture(WindowDragGesture())
+        } else {
+            self
+        }
+    }
+
     /// Glass panel on macOS 26, a material card on older systems.
     @ViewBuilder
     func glassPanel(cornerRadius: CGFloat = 14, interactive: Bool = false) -> some View {

@@ -7,6 +7,7 @@ struct SidebarView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+                .padding(.top, TahoeUI.titlebarInset)
             Divider().overlay(Theme.subtleBorder)
 
             ScrollView {
@@ -36,12 +37,17 @@ struct SidebarView: View {
 
     private var header: some View {
         HStack(spacing: 6) {
-            Image(systemName: "square.stack.3d.up.fill")
-                .font(.system(size: 11))
-                .foregroundStyle(Color.accentColor)
-            Text("Repositories")
-                .font(.system(size: 11, weight: .semibold))
-            Spacer()
+            HStack(spacing: 6) {
+                Image(systemName: "square.stack.3d.up.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.accentColor)
+                Text("Repositories")
+                    .font(.system(size: 11, weight: .semibold))
+                Spacer(minLength: 0)
+            }
+            .contentShape(Rectangle())
+            .windowDragArea()
+
             Button {
                 app.openRepositoryPanel()
             } label: {

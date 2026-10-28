@@ -33,7 +33,9 @@ open build/GitScope.app
 
 **外观（macOS 26）**
 - Liquid Glass 侧边栏、玻璃胶囊控件（旧系统自动回落为材质）
+- 隐藏标题栏：交通灯并入玻璃侧边栏，内容卡片顶到窗口上沿
 - 卡片式布局：渐变背景 + 10pt 间距 + 16pt 圆角，内容区独立阴影
+- 窗口拖动改由侧边栏标题区和标签栏空白处接管（`WindowDragGesture`）
 - 跟随系统 / 浅色 / 深色三档外观（设置里切换，窗口标题栏同步）
 - 滚动内容在顶栏下方渐隐（`scrollEdgeEffectStyle`）
 

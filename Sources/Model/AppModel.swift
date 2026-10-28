@@ -47,9 +47,12 @@ final class AppModel: ObservableObject {
         return sessions[activePath]
     }
 
+    private var isLoadingPreferences = true
+
     init() {
         loadPersisted()
         restoreTabs()
+        isLoadingPreferences = false
     }
 
     // MARK: - Persistence
@@ -86,6 +89,7 @@ final class AppModel: ObservableObject {
     }
 
     private func persist() {
+        guard !isLoadingPreferences else { return }
         let defaults = UserDefaults.standard
         if let data = try? JSONEncoder().encode(repositories) {
             defaults.set(data, forKey: Keys.repositories)
@@ -95,6 +99,7 @@ final class AppModel: ObservableObject {
         defaults.set(diffMode.rawValue, forKey: Keys.diffMode)
         defaults.set(showSidebar, forKey: Keys.showSidebar)
         defaults.set(appearance.rawValue, forKey: Keys.appearance)
+
     }
 
     private func restoreTabs() {
