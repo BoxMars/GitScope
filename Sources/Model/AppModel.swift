@@ -14,9 +14,13 @@ final class AppModel: ObservableObject {
     @Published var showCloneSheet = false
     @Published var globalError: String?
     @Published var showingSettings = false
-    @Published var diffMode: DiffMode = .unified
+    @Published var diffMode: DiffMode = .unified {
+        didSet { persist() }
+    }
     @Published var showSidebar = true
-    @Published var appearance: Appearance = .system
+    @Published var appearance: Appearance = .system {
+        didSet { persist() }
+    }
 
     enum Appearance: String, CaseIterable, Identifiable {
         case system, light, dark
@@ -108,6 +112,7 @@ final class AppModel: ObservableObject {
             Task { await session.refresh(force: true) }
             if tabs.isEmpty { tabs = [session.id] }
         }
+        Task { await loadSidebarMetadata() }
     }
 
     // MARK: - Repositories
@@ -125,6 +130,15 @@ final class AppModel: ObservableObject {
         persist()
         Task { await session.refresh(force: true) }
         return session
+    }
+
+    /// Populate branch/dirty info for repositories that have not been opened yet.
+    private func loadSidebarMetadata() async {
+        for repo in repositories {
+            guard let session = sessions[repo.path], !session.hasLoaded else { continue }
+            await session.loadStatusOnly()
+            try? await Task.sleep(nanoseconds: 60_000_000)
+        }
     }
 
     func openRepositoryPanel() {
@@ -173,10 +187,14 @@ final class AppModel: ObservableObject {
         if sessions[path] == nil {
             guard repositories.contains(where: { $0.path == path }) else { return }
             _ = open(path: path)
-        } else {
-            activePath = path
-            if !tabs.contains(path) { tabs.append(path) }
-            persist()
+            return
+        }
+        guard let session = sessions[path] else { return }
+        activePath = path
+        if !tabs.contains(path) { tabs.append(path) }
+        persist()
+        if !session.hasLoaded {
+            Task { await session.refresh(force: true) }
         }
     }
 

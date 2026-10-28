@@ -18,7 +18,11 @@ struct SidebarView: View {
                         }
                     }
                     if let session = app.activeSession {
-                        Divider().padding(.vertical, 6).overlay(Theme.subtleBorder)
+                        Rectangle()
+                            .fill(Theme.subtleBorder)
+                            .frame(height: 1)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
                         SidebarRepoSections(session: session)
                     }
                 }
@@ -123,7 +127,7 @@ private struct RepositoryRow: View {
         .frame(height: 34)
         .background(
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.045) : Color.clear))
+                .fill(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.028) : Color.clear))
                 .padding(.horizontal, 6)
         )
         .contentShape(Rectangle())
@@ -215,7 +219,7 @@ struct SidebarRepoSections: View {
                 .frame(height: 26)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(session.selection == .workingDirectory ? Theme.selectionBackground : Color.clear)
+                        .fill(session.mode == .changes ? Theme.selectionBackground : Color.clear)
                         .padding(.horizontal, 6)
                 )
                 .contentShape(Rectangle())
@@ -428,7 +432,7 @@ struct SidebarRow: View {
         .frame(height: 24)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.045) : Color.clear))
+                .fill(isActive ? Theme.selectionBackground : (hovering ? Color.primary.opacity(0.028) : Color.clear))
                 .padding(.horizontal, 6)
         )
         .contentShape(Rectangle())

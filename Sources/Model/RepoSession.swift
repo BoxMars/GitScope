@@ -20,6 +20,7 @@ final class RepoSession: ObservableObject, Identifiable {
     @Published var operation: GitRepo.Operation?
 
     @Published var isLoading = false
+    @Published var hasLoaded = false
     @Published var isBusy = false
     @Published var busyMessage: String?
     @Published var errorMessage: String?
@@ -210,6 +211,7 @@ final class RepoSession: ObservableObject, Identifiable {
             self.commits = loaded
             self.graph = GraphLayout.compute(commits: loaded)
             self.lastRefresh = Date()
+            self.hasLoaded = true
             resyncSelection()
             if !didRestoreSelection {
                 didRestoreSelection = true
@@ -225,6 +227,17 @@ final class RepoSession: ObservableObject, Identifiable {
             }
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Cheap metadata load for sidebar rows: branch name + dirty state only.
+    func loadStatusOnly() async {
+        guard !hasLoaded else { return }
+        if let status = try? await GitRepo.status(at: root) {
+            self.status = status
+        }
+        if let branches = try? await GitRepo.branches(at: root) {
+            self.branches = branches
         }
     }
 

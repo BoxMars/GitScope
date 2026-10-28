@@ -187,8 +187,18 @@ struct HistoryListView: View {
                 Divider().overlay(Theme.subtleBorder)
             }
             if session.displayCommits.isEmpty {
-                EmptyHint(icon: "clock", title: "No commits",
-                          subtitle: session.isLoading ? "Loading…" : "This repository has no commits yet.")
+                if !session.hasLoaded {
+                    VStack(spacing: 10) {
+                        ProgressView().controlSize(.small)
+                        Text("Loading history…")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    EmptyHint(icon: "clock", title: "No commits",
+                              subtitle: "This repository has no commits yet.")
+                }
             } else {
                 ScrollViewReader { proxy in
                 ScrollView {
