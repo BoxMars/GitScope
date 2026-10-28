@@ -269,34 +269,27 @@ struct HistoryListView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            HStack(spacing: 7) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 14, height: 16)
-                TextField("Filter commits", text: $session.searchText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12))
-                if !session.searchText.isEmpty {
-                    Button {
-                        session.searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.tertiary)
-                    }
-                    .buttonStyle(.plain)
+        HStack(spacing: 7) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 14, height: 16)
+
+            TextField("Filter commits", text: $session.searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12))
+                .frame(height: 16)
+
+            if !session.searchText.isEmpty {
+                Button {
+                    session.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
                 }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 9)
-            .frame(height: 28)
-            .frame(maxWidth: 320)
-            .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.8)
-            )
 
             if let ref = session.filterRef {
                 HStack(spacing: 3) {
@@ -336,7 +329,8 @@ struct HistoryListView: View {
                 .foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 12)
-        .frame(height: 44)
+        .frame(height: 40)
+        .background(Theme.contentBackground)
     }
 
     @ViewBuilder

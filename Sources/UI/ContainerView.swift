@@ -80,7 +80,7 @@ struct RepoView: View {
         } right: {
             detailPane
         }
-        .padding(.top, 12)
+        .padding(.top, 2)
         .background(Theme.contentBackground)
         .background(InspectorSheets(session: session))
         .sheet(isPresented: $session.showRebaseSheet) {
