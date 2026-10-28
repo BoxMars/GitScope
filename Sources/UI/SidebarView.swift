@@ -139,6 +139,21 @@ private struct RepositoryRow: View {
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .contextMenu {
+            Menu("Checkout branch") {
+                ForEach(session.localBranches) { branch in
+                    Button {
+                        Task { await session.checkout(branch) }
+                    } label: {
+                        if branch.isCurrent { Label(branch.name, systemImage: "checkmark") }
+                        else { Text(branch.name) }
+                    }
+                }
+            }
+            Divider()
+            Button("Fetch") { Task { await session.fetch() } }
+            Button("Pull") { Task { await session.pull() } }
+            Button("Push") { Task { await session.push() } }
+            Divider()
             Button("Reveal in Finder") {
                 NSWorkspace.shared.selectFile(repo.path, inFileViewerRootedAtPath: repo.path)
             }

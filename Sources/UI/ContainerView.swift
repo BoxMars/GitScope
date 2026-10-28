@@ -23,11 +23,10 @@ struct MainView: View {
                         RepoView(session: session)
                     } else {
                         WelcomeView()
-                            .cardBackground()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(10)
+                .background(Theme.contentBackground)
             }
             .ignoresSafeArea(.container, edges: .top)
         }
@@ -76,17 +75,13 @@ struct RepoView: View {
     @ObservedObject var session: RepoSession
 
     var body: some View {
-        VStack(spacing: 8) {
-            RepoToolbar(session: session)
-
-            CanvasSplitView(initialWidth: 520) {
-                leftPane
-                    .cardBackground()
-            } right: {
-                detailPane
-                    .cardBackground()
-            }
+        CanvasSplitView(initialWidth: 520) {
+            leftPane
+        } right: {
+            detailPane
         }
+        .padding(.top, 12)
+        .background(Theme.contentBackground)
         .background(InspectorSheets(session: session))
         .sheet(isPresented: $session.showRebaseSheet) {
             InteractiveRebaseSheet(session: session)
@@ -151,153 +146,6 @@ struct RepoView: View {
         } else {
             EmptyHint(icon: "clock", title: "No commit selected", subtitle: nil)
         }
-    }
-}
-
-struct RepoToolbar: View {
-    @ObservedObject var session: RepoSession
-    @EnvironmentObject var app: AppModel
-    @State private var branchSheet: BranchSheetMode?
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Text(abbreviatedPath)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-
-            branchMenu
-
-            if session.status.ahead > 0 || session.status.behind > 0 {
-                HStack(spacing: 4) {
-                    if session.status.ahead > 0 {
-                        Label("\(session.status.ahead)", systemImage: "arrow.up")
-                    }
-                    if session.status.behind > 0 {
-                        Label("\(session.status.behind)", systemImage: "arrow.down")
-                    }
-                }
-                .font(.system(size: 9, weight: .medium))
-                .foregroundStyle(.secondary)
-                .labelStyle(.titleAndIcon)
-            }
-
-            Spacer()
-
-            if session.isBusy {
-                HStack(spacing: 5) {
-                    ProgressView().controlSize(.mini)
-                    Text(session.busyMessage ?? "Working…")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            HStack(spacing: 2) {
-                ToolbarButton(icon: "arrow.down.to.line", help: "Fetch (⇧⌘F)") {
-                    Task { await session.fetch() }
-                }
-                ToolbarButton(icon: "arrow.down", help: "Pull (⇧⌘P)") {
-                    Task { await session.pull() }
-                }
-                ToolbarButton(icon: "arrow.up", help: "Push (⇧⌘K)") {
-                    Task { await session.push() }
-                }
-            }
-            .padding(.horizontal, 4)
-            .background(Theme.contentBackground, in: Capsule())
-            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.07), lineWidth: 0.8))
-
-            ToolbarButton(icon: "arrow.clockwise", help: "Refresh (⌘R)") {
-                Task { await session.refresh(force: true) }
-            }
-
-            Menu {
-                Button("Blame selected file") {
-                    if let path = session.selectedDiffFile?.path {
-                        session.inspector = .blame(path)
-                    }
-                }
-                .disabled(session.selectedDiffFile == nil)
-                Button("File history") {
-                    if let path = session.selectedDiffFile?.path {
-                        session.inspector = .fileHistory(path)
-                    }
-                }
-                .disabled(session.selectedDiffFile == nil)
-                Divider()
-                Button("Reflog") { session.inspector = .reflog }
-                Button("Submodules") { session.inspector = .submodules }
-                Divider()
-                Button("Reveal repository in Finder") { session.openInFinder() }
-                Button("Open repository in Terminal") { session.openInTerminal() }
-                Divider()
-                Button("Interactive rebase…") { session.showRebaseSheet = true }
-                Button("New worktree…") { session.showWorktreeSheet = true }
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.system(size: 12, weight: .medium))
-                    .frame(width: 26, height: 24)
-                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 5))
-            }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .fixedSize()
-
-        }
-        .padding(.horizontal, 4)
-        .frame(height: 44)
-        .sheet(item: $branchSheet) { mode in
-            NewBranchSheet(session: session, mode: mode)
-        }
-    }
-
-    private var abbreviatedPath: String {
-        let home = NSHomeDirectory()
-        let path = session.root
-        if path.hasPrefix(home) {
-            return "~" + path.dropFirst(home.count)
-        }
-        return path
-    }
-
-    private var branchMenu: some View {
-        Menu {
-            ForEach(session.localBranches) { branch in
-                Button {
-                    Task { await session.checkout(branch) }
-                } label: {
-                    if branch.isCurrent {
-                        Label(branch.name, systemImage: "checkmark")
-                    } else {
-                        Text(branch.name)
-                    }
-                }
-            }
-            Divider()
-            Button("New branch…") {
-                branchSheet = .create(startPoint: nil)
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "arrow.triangle.branch")
-                    .font(.system(size: 9))
-                Text(session.status.branch ?? (session.status.detached ? "detached" : "—"))
-                    .font(.system(size: 10.5, weight: .medium))
-                if session.isDirty {
-                    Circle().fill(Color(hex: 0xF59E0B)).frame(width: 4, height: 4)
-                }
-            }
-            .foregroundStyle(Color.accentColor)
-        }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .padding(.horizontal, 9)
-        .padding(.vertical, 4)
-        .background(Theme.contentBackground, in: Capsule())
-        .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8))
     }
 }
 

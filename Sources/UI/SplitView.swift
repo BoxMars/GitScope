@@ -6,7 +6,7 @@ struct CanvasSplitView<Left: View, Right: View>: View {
     var initialWidth: CGFloat = 470
     var minLeft: CGFloat = 340
     var minRight: CGFloat = 380
-    var gap: CGFloat = 10
+    var gap: CGFloat = 9
     @ViewBuilder var left: () -> Left
     @ViewBuilder var right: () -> Right
 
@@ -39,11 +39,9 @@ struct CanvasSplitView<Left: View, Right: View>: View {
             .frame(width: gap)
             .contentShape(Rectangle())
             .overlay {
-                if hovering || dragging {
-                    Capsule()
-                        .fill(Color.primary.opacity(0.18))
-                        .frame(width: 2)
-                }
+                Rectangle()
+                    .fill(hovering || dragging ? Theme.accent.opacity(0.7) : Theme.border)
+                    .frame(width: hovering || dragging ? 2 : 1)
             }
             .onHover { inside in
                 hovering = inside

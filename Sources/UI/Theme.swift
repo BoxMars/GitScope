@@ -44,9 +44,12 @@ enum Theme {
     static let diffRemovedGutter = adaptive(light: 0xF8D8DA, dark: 0x3A1A1E)
     static let hunkBackground = adaptive(light: 0xEFF4FC, dark: 0x1A2233)
 
-    static let selectionBackground = adaptive(light: 0xE3EDFD, dark: 0x24354E)
+    static let selectionBackground = adaptive(light: 0xE3EDFD, dark: 0x2C4A73)
+    /// App accent, pinned so the selection never turns grey when the system
+    /// accent is graphite or the window is inactive.
+    static let accent = Color(hex: 0x0A84FF)
     /// Sidebar row selection: filled accent, like the system apps.
-    static let sidebarSelection = Color.accentColor
+    static let sidebarSelection = Color(hex: 0x0A84FF)
 
     static func adaptive(light: UInt32, dark: UInt32) -> Color {
         Color(nsColor: NSColor(name: nil) { appearance in
