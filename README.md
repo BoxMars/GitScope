@@ -38,7 +38,7 @@ open build/GitScope.app
 
 **历史与 diff**
 - 中栏顶部 `History / Changes` 切换；默认打开历史，侧边栏 `All Commits` / `Working Directory` 也能直接切换
-- 分支图（泳道、合并曲线、merge 空心节点、ref 徽章）
+- 分支图（泳道、合并曲线、merge 空心节点、ref 徽章），列表右上角 `?` 有图例说明
 - 提交列表过滤：按消息、作者、邮箱、hash 搜索
 - 按分支/远程分支过滤历史
 - 提交详情：作者、时间、hash、正文、改动文件列表

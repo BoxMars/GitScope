@@ -11,6 +11,8 @@ struct GraphRow {
     var outgoing: [(lane: Int, color: Int)] = []
     /// Own lane continues downwards (commit has a first parent).
     var continuesDown: Bool = false
+    /// Some child commit links into this row from above (draw the segment above the node).
+    var hasIncoming: Bool = false
 }
 
 struct GraphLayout {
@@ -43,6 +45,7 @@ struct GraphLayout {
 
         for commit in commits {
             var laneIndex = lanes.firstIndex(where: { $0 == commit.hash })
+            let existed = laneIndex != nil
             if laneIndex == nil {
                 let allocated = allocateLane()
                 lanes[allocated] = commit.hash
@@ -50,7 +53,7 @@ struct GraphLayout {
                 laneIndex = allocated
             }
             let lane = laneIndex!
-            var row = GraphRow(lane: lane, color: colors[lane])
+            var row = GraphRow(lane: lane, color: colors[lane], hasIncoming: existed)
 
             // Lanes merging into this commit (other lanes that also expected it).
             for j in lanes.indices where j != lane && lanes[j] == commit.hash {

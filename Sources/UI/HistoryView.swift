@@ -1,5 +1,54 @@
 import SwiftUI
 
+struct GraphLegend: View {
+    var onClose: (() -> Void)? = nil
+
+    private func row(color: Color, ring: Bool = false, text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            ZStack {
+                if ring {
+                    Circle().stroke(color, lineWidth: 2).frame(width: 9, height: 9)
+                } else {
+                    Circle().fill(color).frame(width: 9, height: 9)
+                }
+            }
+            .frame(width: 14, height: 16)
+            Text(text)
+                .font(.system(size: 10.5))
+                .foregroundStyle(Theme.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                Text("怎么看这张图")
+                    .font(.system(size: 11, weight: .semibold))
+                Spacer()
+                if let onClose {
+                    Button(action: onClose) {
+                        Image(systemName: "xmark").font(.system(size: 8, weight: .bold))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.tertiary)
+                }
+            }
+            row(color: Theme.graphColor(0), text: "每条竖线是一条提交链；同一条线上的圆点，后一个是前一个的父提交。")
+            row(color: Theme.graphColor(1), text: "彩色曲线表示另一条分支的提交接进来，换色只是为了区分泳道。")
+            row(color: Theme.graphColor(0), ring: true, text: "空心圆是 merge 提交：两个父提交，一条线向下、一条曲线分出去。")
+            Text("最上面是最新提交，越往下越早。")
+                .font(.system(size: 9.5))
+                .foregroundStyle(.tertiary)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(Theme.hunkBackground)
+    }
+}
+
 struct GraphCell: View {
     var row: GraphRow
     var isMerge: Bool
@@ -25,9 +74,16 @@ struct GraphCell: View {
                 return path
             }
 
+            if row.hasIncoming {
+                var path = Path()
+                path.move(to: CGPoint(x: x(row.lane), y: 0))
+                path.addLine(to: CGPoint(x: x(row.lane), y: nodeY - 4))
+                context.stroke(path, with: .color(Theme.graphColor(row.color).opacity(0.9)), lineWidth: 1.6)
+            }
+
             if row.continuesDown {
                 var path = Path()
-                path.move(to: CGPoint(x: x(row.lane), y: nodeY))
+                path.move(to: CGPoint(x: x(row.lane), y: nodeY + 4))
                 path.addLine(to: CGPoint(x: x(row.lane), y: size.height))
                 context.stroke(path, with: .color(Theme.graphColor(row.color).opacity(0.9)), lineWidth: 1.6)
             }
@@ -118,6 +174,7 @@ struct HistoryListView: View {
     @ObservedObject var session: RepoSession
     @State private var hoveredHash: String?
     @State private var branchSheet: BranchSheetMode?
+    @State private var showGraphHelp = false
     @State private var tagTarget: Commit?
     @State private var resetTarget: Commit?
 
@@ -125,6 +182,10 @@ struct HistoryListView: View {
         VStack(spacing: 0) {
             header
             Divider().overlay(Theme.subtleBorder)
+            if showGraphHelp {
+                GraphLegend(onClose: { withAnimation(.easeInOut(duration: 0.12)) { showGraphHelp = false } })
+                Divider().overlay(Theme.subtleBorder)
+            }
             if session.displayCommits.isEmpty {
                 EmptyHint(icon: "clock", title: "No commits",
                           subtitle: session.isLoading ? "Loading…" : "This repository has no commits yet.")
@@ -224,6 +285,15 @@ struct HistoryListView: View {
             if session.isLoading {
                 ProgressView().controlSize(.mini).scaleEffect(0.7)
             }
+            Button {
+                withAnimation(.easeInOut(duration: 0.12)) { showGraphHelp.toggle() }
+            } label: {
+                Image(systemName: showGraphHelp ? "questionmark.circle.fill" : "questionmark.circle")
+                    .font(.system(size: 11))
+                    .foregroundStyle(showGraphHelp ? Color.accentColor : Color.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("What do the lines mean?")
             Text("\(session.displayCommits.count)")
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.tertiary)
