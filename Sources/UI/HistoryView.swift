@@ -310,9 +310,8 @@ struct HistoryListView: View {
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal, 10)
-        .frame(height: 32)
-        .background(Theme.toolbarBackground)
+        .padding(.horizontal, 12)
+        .frame(height: 36)
     }
 
     @ViewBuilder

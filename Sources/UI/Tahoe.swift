@@ -1,8 +1,8 @@
 import SwiftUI
 import AppKit
 
-/// Window-level chrome tweaks for a modern macOS look: transparent title bar,
-/// hidden title text, and a glassy backdrop behind the content cards.
+/// Window-level chrome: content runs under a hidden title bar so the traffic
+/// lights can live inside the sidebar.
 struct WindowChromeConfigurator: NSViewRepresentable {
     var appearance: AppModel.Appearance = .system
 
@@ -35,7 +35,6 @@ struct WindowChromeConfigurator: NSViewRepresentable {
     }
 }
 
-/// Subtle gradient + soft light pools used as the backdrop under the glass panels.
 enum TahoeUI {
     /// Height reserved for the traffic lights when content runs under the title bar.
     static let titlebarInset: CGFloat = 26
@@ -43,40 +42,34 @@ enum TahoeUI {
     static let glassEnabled = true
 }
 
+/// Flat neutral canvas behind the floating cards (Activity Monitor style).
 struct AppBackdrop: View {
-    @Environment(\.colorScheme) private var scheme
-
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: scheme == .dark
-                    ? [Color(hex: 0x101012), Color(hex: 0x18181B), Color(hex: 0x0D0D0F)]
-                    : [Color(hex: 0xF3F3F5), Color(hex: 0xEAEAEE), Color(hex: 0xF6F6F8)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        Theme.canvas.ignoresSafeArea()
+    }
+}
 
-            // Very soft neutral pools; no colour cast on the glass panels.
-            GeometryReader { proxy in
-                let w = proxy.size.width
-                let h = proxy.size.height
-                Circle()
-                    .fill(Color.white.opacity(scheme == .dark ? 0.04 : 0.55))
-                    .frame(width: w * 0.6)
-                    .blur(radius: 140)
-                    .offset(x: -w * 0.2, y: -h * 0.32)
-                Circle()
-                    .fill(Color.black.opacity(scheme == .dark ? 0.18 : 0.03))
-                    .frame(width: w * 0.5)
-                    .blur(radius: 160)
-                    .offset(x: w * 0.3, y: h * 0.3)
-            }
-        }
-        .ignoresSafeArea()
+/// A page-level card: solid surface, large radius, hairline border.
+struct CardBackground: ViewModifier {
+    var cornerRadius: CGFloat = 18
+
+    func body(content: Content) -> some View {
+        content
+            .background(Theme.contentBackground)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.8)
+            )
+            .shadow(color: .black.opacity(0.05), radius: 10, y: 3)
     }
 }
 
 extension View {
+    func cardBackground(cornerRadius: CGFloat = 18) -> some View {
+        modifier(CardBackground(cornerRadius: cornerRadius))
+    }
+
     /// Makes a background strip behave like the window title bar.
     @ViewBuilder
     func windowDragArea() -> some View {

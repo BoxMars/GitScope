@@ -101,13 +101,13 @@ private struct RepositoryRow: View {
     var body: some View {
         HStack(spacing: 7) {
             ZStack {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(color.opacity(0.18))
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(isActive ? Color.white.opacity(0.22) : color.opacity(0.18))
                 Text(String(repo.name.prefix(1)).uppercased())
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(color)
+                    .foregroundStyle(isActive ? Color.white : color)
             }
-            .frame(width: 18, height: 18)
+            .frame(width: 19, height: 19)
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(repo.name)
@@ -123,7 +123,7 @@ private struct RepositoryRow: View {
             }
             Spacer(minLength: 2)
             if session.isDirty {
-                Circle().fill(Color(hex: 0xF59E0B)).frame(width: 5, height: 5)
+                Circle().fill(isActive ? Color.white : Color(hex: 0xF59E0B)).frame(width: 5, height: 5)
             }
             if session.isBusy {
                 ProgressView().controlSize(.mini).scaleEffect(0.6)
@@ -178,23 +178,21 @@ struct SidebarRepoSections: View {
                 }
             } label: {
                 HStack(spacing: 7) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 10))
-                        .frame(width: 14)
-                        .foregroundStyle(.secondary)
+                    SidebarIcon(systemName: "clock", isActive: isHistorySelected)
                     Text("All Commits")
                         .font(.system(size: 11.5))
+                        .foregroundStyle(isHistorySelected ? Color.white : Color.primary)
                     Spacer()
                     Text("\(session.commits.count)")
                         .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(isHistorySelected ? Color.white.opacity(0.75) : Color.secondary)
                 }
                 .padding(.horizontal, 10)
                 .frame(maxWidth: .infinity)
                 .frame(height: 26)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(session.mode == .history && session.filterRef == nil ? Theme.sidebarSelection : Color.clear)
+                        .fill(isHistorySelected ? Theme.sidebarSelection : Color.clear)
                         .padding(.horizontal, 6)
                 )
                 .contentShape(Rectangle())
@@ -205,19 +203,19 @@ struct SidebarRepoSections: View {
                 session.selectWorkingDirectory()
             } label: {
                 HStack(spacing: 7) {
-                    Image(systemName: "square.and.pencil")
-                        .font(.system(size: 10))
-                        .frame(width: 14)
-                        .foregroundStyle(.secondary)
+                    SidebarIcon(systemName: "square.and.pencil", isActive: isChangesSelected)
                     Text("Working Directory")
                         .font(.system(size: 11.5))
+                        .foregroundStyle(isChangesSelected ? Color.white : Color.primary)
                     Spacer()
                     if !session.status.changes.isEmpty {
                         Text("\(session.status.changes.count)")
                             .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color.accentColor.opacity(0.16), in: Capsule())
+                            .foregroundStyle(isChangesSelected ? Color.white : Color.accentColor)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1.5)
+                            .background(isChangesSelected ? Color.white.opacity(0.22) : Color.accentColor.opacity(0.14),
+                                        in: Capsule())
                     }
                 }
                 .padding(.horizontal, 10)
@@ -225,7 +223,7 @@ struct SidebarRepoSections: View {
                 .frame(height: 26)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(session.mode == .changes ? Theme.sidebarSelection : Color.clear)
+                        .fill(isChangesSelected ? Theme.sidebarSelection : Color.clear)
                         .padding(.horizontal, 6)
                 )
                 .contentShape(Rectangle())
@@ -379,6 +377,14 @@ struct SidebarRepoSections: View {
         .buttonStyle(.plain)
     }
 
+    private var isHistorySelected: Bool {
+        session.mode == .history && session.filterRef == nil
+    }
+
+    private var isChangesSelected: Bool {
+        session.mode == .changes
+    }
+
     private func aheadBehind(_ branch: Branch) -> String? {
         var pieces: [String] = []
         if branch.ahead > 0 { pieces.append("↑\(branch.ahead)") }
@@ -404,6 +410,23 @@ struct SidebarRepoSections: View {
     }
 }
 
+struct SidebarIcon: View {
+    var systemName: String
+    var isActive: Bool = false
+    var tint: Color = Theme.secondaryText
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(isActive ? Color.white.opacity(0.22) : Color.primary.opacity(0.055))
+            Image(systemName: systemName)
+                .font(.system(size: 9.5, weight: .medium))
+                .foregroundStyle(isActive ? Color.white : tint)
+        }
+        .frame(width: 19, height: 19)
+    }
+}
+
 struct SidebarRow: View {
     var icon: String
     var title: String
@@ -415,22 +438,22 @@ struct SidebarRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 9.5))
-                .frame(width: 14)
-                .foregroundStyle(isCurrent ? Color.accentColor : Theme.secondaryText)
+            SidebarIcon(systemName: icon,
+                        isActive: isActive,
+                        tint: isCurrent ? Color.accentColor : Theme.secondaryText)
             Text(title)
                 .font(.system(size: 11.5, weight: isCurrent ? .medium : .regular))
+                .foregroundStyle(isActive ? Color.white : Color.primary)
                 .lineLimit(1)
                 .truncationMode(.middle)
             if isCurrent {
-                Circle().fill(Color.accentColor).frame(width: 4, height: 4)
+                Circle().fill(isActive ? Color.white : Color.accentColor).frame(width: 4, height: 4)
             }
             Spacer(minLength: 2)
             if let detail {
                 Text(detail)
                     .font(.system(size: 9.5, design: .monospaced))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(isActive ? Color.white.opacity(0.7) : Color.secondary)
                     .lineLimit(1)
             }
         }
@@ -463,12 +486,11 @@ struct SidebarSection<Content: View>: View {
                         .font(.system(size: 8, weight: .semibold))
                         .rotationEffect(.degrees(expanded ? 90 : 0))
                         .foregroundStyle(.tertiary)
-                    Text(title.uppercased())
-                        .font(.system(size: 9.5, weight: .semibold))
-                        .tracking(0.4)
+                    Text(title)
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.secondaryText)
                     Text("\(count)")
-                        .font(.system(size: 9, design: .monospaced))
+                        .font(.system(size: 9.5, design: .monospaced))
                         .foregroundStyle(.tertiary)
                     Spacer()
                 }

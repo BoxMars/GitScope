@@ -30,7 +30,8 @@ enum Theme {
     }
 
     static let sidebarBackground = adaptive(light: 0xF3F3F5, dark: 0x1C1C1E)
-    static let contentBackground = adaptive(light: 0xFFFFFF, dark: 0x1E1E20)
+    static let contentBackground = adaptive(light: 0xFFFFFF, dark: 0x1F1F22)
+    static let canvas = adaptive(light: 0xEFEFF2, dark: 0x131315)
     static let editorBackground = adaptive(light: 0xFFFFFF, dark: 0x191919)
     static let toolbarBackground = adaptive(light: 0xF8F8FA, dark: 0x232325)
     static let border = adaptive(light: 0xE2E2E6, dark: 0x35353A)
@@ -44,8 +45,8 @@ enum Theme {
     static let hunkBackground = adaptive(light: 0xEFF4FC, dark: 0x1A2233)
 
     static let selectionBackground = adaptive(light: 0xE3EDFD, dark: 0x24354E)
-    /// Neutral sidebar row selection (Finder-like), independent of the accent colour.
-    static let sidebarSelection = Color.primary.opacity(0.07)
+    /// Sidebar row selection: filled accent, like the system apps.
+    static let sidebarSelection = Color.accentColor
 
     static func adaptive(light: UInt32, dark: UInt32) -> Color {
         Color(nsColor: NSColor(name: nil) { appearance in

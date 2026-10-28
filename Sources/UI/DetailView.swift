@@ -154,8 +154,7 @@ struct CommitDetailView: View {
             .scaleEffect(0.82)
         }
         .padding(.horizontal, 12)
-        .frame(height: 24)
-        .background(Theme.toolbarBackground)
+        .frame(height: 30)
     }
 
     private var treeList: some View {

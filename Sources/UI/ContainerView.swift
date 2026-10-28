@@ -12,26 +12,19 @@ struct MainView: View {
                 if app.showSidebar {
                     SidebarView()
                         .frame(width: Theme.sidebarWidth)
-                        .glassPanel(cornerRadius: 16)
+                        .glassPanel(cornerRadius: 18)
                 }
 
-                VStack(spacing: 0) {
+                VStack(spacing: 8) {
                     TabBarView()
-                    Divider().overlay(Theme.border)
                     if let session = app.activeSession {
                         RepoView(session: session)
                     } else {
                         WelcomeView()
+                            .cardBackground()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.contentBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.8)
-                )
-                .shadow(color: .black.opacity(0.12), radius: 14, y: 4)
             }
             .padding(10)
             .padding(.top, 0)
@@ -149,9 +142,8 @@ struct RepoPaneSwitcher: View {
                     .lineLimit(1)
             }
         }
-        .padding(.horizontal, 10)
-        .frame(height: 34)
-        .background(Theme.toolbarBackground)
+        .padding(.horizontal, 12)
+        .frame(height: 40)
     }
 }
 
@@ -186,13 +178,12 @@ struct TabItemView: View {
         .padding(.horizontal, 9)
         .frame(height: 28)
         .frame(minWidth: 90, maxWidth: 170)
-        .background(isActive ? Theme.contentBackground : (hovering ? Color.primary.opacity(0.04) : Color.clear),
-                    in: RoundedRectangle(cornerRadius: 5))
-        .overlay(alignment: .bottom) {
-            if isActive {
-                Rectangle().fill(Color.accentColor).frame(height: 2).padding(.horizontal, 4)
-            }
-        }
+        .background(isActive ? Theme.contentBackground : (hovering ? Color.primary.opacity(0.05) : Color.clear),
+                    in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .strokeBorder(isActive ? Color.primary.opacity(0.07) : Color.clear, lineWidth: 0.8)
+        )
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onTapGesture { app.activate(path) }
@@ -212,18 +203,19 @@ struct RepoView: View {
     @ObservedObject var session: RepoSession
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 8) {
             RepoToolbar(session: session)
-            Divider().overlay(Theme.border)
-            HSplitView {
+
+            CanvasSplitView(initialWidth: 520) {
                 VStack(spacing: 0) {
                     RepoPaneSwitcher(session: session)
                     Divider().overlay(Theme.subtleBorder)
                     leftPane
                 }
-                .frame(minWidth: 380, idealWidth: 470, maxWidth: 700)
+                .cardBackground()
+            } right: {
                 detailPane
-                    .frame(minWidth: 380, maxWidth: .infinity)
+                    .cardBackground()
             }
         }
         .background(InspectorSheets(session: session))
@@ -349,8 +341,9 @@ struct RepoToolbar: View {
                     Task { await session.push() }
                 }
             }
-            .padding(.horizontal, 2)
-            .glassChip(cornerRadius: 7)
+            .padding(.horizontal, 4)
+            .background(Theme.contentBackground, in: Capsule())
+            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.07), lineWidth: 0.8))
 
             ToolbarButton(icon: "arrow.clockwise", help: "Refresh (⌘R)") {
                 Task { await session.refresh(force: true) }
@@ -389,9 +382,8 @@ struct RepoToolbar: View {
             .fixedSize()
 
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 4)
         .frame(height: 44)
-        .background(Theme.toolbarBackground)
         .sheet(item: $branchSheet) { mode in
             NewBranchSheet(session: session, mode: mode)
         }
@@ -433,11 +425,10 @@ struct RepoToolbar: View {
                     Circle().fill(Color(hex: 0xF59E0B)).frame(width: 4, height: 4)
                 }
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, 9)
             .padding(.vertical, 4)
-            .glassChip(cornerRadius: 9)
-            .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .strokeBorder(Color.accentColor.opacity(0.18), lineWidth: 0.8))
+            .background(Theme.contentBackground, in: Capsule())
+            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.07), lineWidth: 0.8))
             .foregroundStyle(Color.accentColor)
         }
         .menuStyle(.borderlessButton)
