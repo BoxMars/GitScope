@@ -38,6 +38,7 @@ struct FileDiffView: View {
                     .font(.system(size: 11.5, weight: .medium, design: .monospaced))
                     .lineLimit(1)
                     .truncationMode(.middle)
+                    .layoutPriority(0)
                 if let old = file.oldPath, old != file.path {
                     Text("← \(old)")
                         .font(.system(size: 10, design: .monospaced))
@@ -47,46 +48,51 @@ struct FileDiffView: View {
             } else {
                 Text(diff?.path ?? "Diff")
                     .font(.system(size: 11.5, weight: .medium, design: .monospaced))
+                    .lineLimit(1)
             }
 
-            Spacer(minLength: 6)
+            Spacer(minLength: 4)
 
-            if let diff, !diff.hunks.isEmpty {
-                Text("+\(diff.hunks.reduce(0) { $0 + $1.lines.filter { $0.kind == .added }.count })")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(Color(hex: 0x16A34A))
-                Text("-\(diff.hunks.reduce(0) { $0 + $1.lines.filter { $0.kind == .removed }.count })")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(Color(hex: 0xDC2626))
-            }
-
-            if let onModeChange {
-                Picker("", selection: Binding(get: { mode }, set: { onModeChange($0) })) {
-                    Image(systemName: "rectangle.split.1x2").tag(AppModel.DiffMode.unified)
-                    Image(systemName: "rectangle.split.2x1").tag(AppModel.DiffMode.sideBySide)
+            HStack(spacing: 8) {
+                if let diff, !diff.hunks.isEmpty {
+                    Text("+\(diff.hunks.reduce(0) { $0 + $1.lines.filter { $0.kind == .added }.count })")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(Color(hex: 0x16A34A))
+                    Text("-\(diff.hunks.reduce(0) { $0 + $1.lines.filter { $0.kind == .removed }.count })")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(Color(hex: 0xDC2626))
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 74)
-                .help("Unified / side-by-side diff (⌥⌘D)")
-            }
 
-            if file != nil, let onStageFile, stagedContext == false {
-                Button("Stage") { onStageFile() }
-                    .buttonStyle(.borderless)
-                    .font(.system(size: 10, weight: .medium))
+                if let onModeChange {
+                    Picker("", selection: Binding(get: { mode }, set: { onModeChange($0) })) {
+                        Image(systemName: "rectangle.split.1x2").tag(AppModel.DiffMode.unified)
+                        Image(systemName: "rectangle.split.2x1").tag(AppModel.DiffMode.sideBySide)
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(width: 72)
+                    .help("Unified / side-by-side diff (⌥⌘D)")
+                }
+
+                if file != nil, let onStageFile, stagedContext == false {
+                    Button("Stage") { onStageFile() }
+                        .buttonStyle(.borderless)
+                        .font(.system(size: 10, weight: .medium))
+                }
+                if file != nil, let onUnstageFile, stagedContext == true {
+                    Button("Unstage") { onUnstageFile() }
+                        .buttonStyle(.borderless)
+                        .font(.system(size: 10, weight: .medium))
+                }
+                if file != nil, let onDiscardFile, stagedContext == false {
+                    Button("Discard") { onDiscardFile() }
+                        .buttonStyle(.borderless)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(hex: 0xDC2626))
+                }
             }
-            if file != nil, let onUnstageFile, stagedContext == true {
-                Button("Unstage") { onUnstageFile() }
-                    .buttonStyle(.borderless)
-                    .font(.system(size: 10, weight: .medium))
-            }
-            if file != nil, let onDiscardFile, stagedContext == false {
-                Button("Discard") { onDiscardFile() }
-                    .buttonStyle(.borderless)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Color(hex: 0xDC2626))
-            }
+            .fixedSize()
+            .layoutPriority(1)
         }
         .padding(.horizontal, 10)
         .frame(height: 30)
