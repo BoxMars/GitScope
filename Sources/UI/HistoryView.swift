@@ -269,13 +269,35 @@ struct HistoryListView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-            TextField("Filter commits", text: $session.searchText)
-                .textFieldStyle(.plain)
-                .font(.system(size: 12))
+        HStack(spacing: 8) {
+            HStack(spacing: 7) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 14, height: 16)
+                TextField("Filter commits", text: $session.searchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12))
+                if !session.searchText.isEmpty {
+                    Button {
+                        session.searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 9)
+            .frame(height: 28)
+            .frame(maxWidth: 320)
+            .background(Theme.canvas, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.8)
+            )
+
             if let ref = session.filterRef {
                 HStack(spacing: 3) {
                     Image(systemName: "arrow.triangle.branch").font(.system(size: 9))
@@ -287,31 +309,34 @@ struct HistoryListView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .foregroundStyle(Color.accentColor)
-                .padding(.horizontal, 5)
-                .padding(.vertical, 2)
-                .background(Color.accentColor.opacity(0.12), in: Capsule())
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Theme.accent.opacity(0.10), in: Capsule())
             }
+
             Spacer(minLength: 4)
+
             if session.isLoading {
                 ProgressView().controlSize(.mini).scaleEffect(0.7)
             }
             Button {
-                withAnimation(.easeInOut(duration: 0.12)) { showGraphHelp.toggle() }
+                showGraphHelp.toggle()
             } label: {
-                Image(systemName: showGraphHelp ? "questionmark.circle.fill" : "questionmark.circle")
+                Image(systemName: "questionmark.circle")
                     .font(.system(size: 11))
-                    .foregroundStyle(showGraphHelp ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(.tertiary)
             }
             .buttonStyle(.plain)
             .help("What do the lines mean?")
             .padding(.horizontal, 2)
+
             Text("\(session.displayCommits.count)")
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 12)
-        .frame(height: 36)
+        .frame(height: 44)
     }
 
     @ViewBuilder
