@@ -31,7 +31,8 @@ struct CommitDetailView: View {
                              file: session.selectedFile,
                              isLoading: session.isDiffLoading,
                              mode: app.diffMode,
-                             imagePair: session.imagePair)
+                             imagePair: session.imagePair,
+                             onModeChange: { app.diffMode = $0 })
             }
         }
         .background(Theme.editorBackground)

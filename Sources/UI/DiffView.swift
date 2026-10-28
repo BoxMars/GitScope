@@ -13,6 +13,7 @@ struct FileDiffView: View {
     var onStageFile: (() -> Void)? = nil
     var onUnstageFile: (() -> Void)? = nil
     var onDiscardFile: (() -> Void)? = nil
+    var onModeChange: ((AppModel.DiffMode) -> Void)? = nil
 
     private var language: String {
         SyntaxHighlighter.family(for: file?.path ?? diff?.path ?? "")
@@ -57,6 +58,17 @@ struct FileDiffView: View {
                 Text("-\(diff.hunks.reduce(0) { $0 + $1.lines.filter { $0.kind == .removed }.count })")
                     .font(.system(size: 10, weight: .semibold, design: .monospaced))
                     .foregroundStyle(Color(hex: 0xDC2626))
+            }
+
+            if let onModeChange {
+                Picker("", selection: Binding(get: { mode }, set: { onModeChange($0) })) {
+                    Image(systemName: "rectangle.split.1x2").tag(AppModel.DiffMode.unified)
+                    Image(systemName: "rectangle.split.2x1").tag(AppModel.DiffMode.sideBySide)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 74)
+                .help("Unified / side-by-side diff (⌥⌘D)")
             }
 
             if file != nil, let onStageFile, stagedContext == false {
@@ -144,12 +156,11 @@ private struct DiffBody: View {
                 for line in hunk.lines { result.append(.line(line)) }
             }
         } else {
-            let rows = DiffParser.sideBySide(diff)
-            for row in rows {
-                if row.kind == .hunkHeader, let header = row.header {
-                    result.append(.header(header, DiffHunk(header: header, oldStart: 0, oldCount: 0,
-                                                           newStart: 0, newCount: 0, lines: [])))
-                } else {
+            for hunk in diff.hunks {
+                result.append(.header(hunk.header, hunk))
+                let rows = DiffParser.sideBySide(FileDiff(path: diff.path, oldPath: diff.oldPath,
+                                                          hunks: [hunk]))
+                for row in rows where row.kind != .hunkHeader {
                     result.append(.side(row))
                 }
             }
@@ -295,11 +306,19 @@ private struct SideBySideRowView: View {
             default: return .clear
             }
         }()
+        let gutter: Color = {
+            switch (row.kind, side) {
+            case (.removed, .left), (.replaced, .left): return Theme.diffRemovedGutter
+            case (.added, .right), (.replaced, .right): return Theme.diffAddedGutter
+            default: return .clear
+            }
+        }()
         HStack(spacing: 0) {
             Text(number.map(String.init) ?? "")
-                .frame(width: 40, alignment: .trailing)
+                .frame(width: 38, alignment: .trailing)
                 .padding(.trailing, 5)
                 .foregroundStyle(.tertiary)
+                .background(gutter)
             Text(text.map { SyntaxColors.attributed($0.isEmpty ? " " : $0, family: language) } ?? AttributedString(""))
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -307,7 +326,7 @@ private struct SideBySideRowView: View {
                 .padding(.trailing, 6)
         }
         .font(.system(size: 11.5, design: .monospaced))
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .clipped()
         .background(background)
     }

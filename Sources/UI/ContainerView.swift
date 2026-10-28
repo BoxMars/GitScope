@@ -264,7 +264,8 @@ struct RepoView: View {
                          onDiscardFile: (session.selectedChange?.kind == .unmerged) ? nil : {
                              guard let change = session.selectedChange else { return }
                              Task { await session.discard(change) }
-                         })
+                         },
+                         onModeChange: { app.diffMode = $0 })
         } else if let commit = session.selectedCommit {
             CommitDetailView(session: session, commit: commit)
         } else {
@@ -381,18 +382,6 @@ struct RepoToolbar: View {
             .buttonStyle(.plain)
             .help("Ignore whitespace changes")
 
-            Button {
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    app.diffMode = app.diffMode == .unified ? .sideBySide : .unified
-                }
-            } label: {
-                Image(systemName: app.diffMode == .unified ? "rectangle.split.2x1" : "rectangle.split.1x2")
-                    .font(.system(size: 12, weight: .medium))
-                    .frame(width: 26, height: 24)
-                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 5))
-            }
-            .buttonStyle(.plain)
-            .help(app.diffMode == .unified ? "Switch to side-by-side (⌥⌘D)" : "Switch to unified (⌥⌘D)")
         }
         .padding(.horizontal, 12)
         .frame(height: 44)
