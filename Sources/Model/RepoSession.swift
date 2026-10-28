@@ -45,7 +45,6 @@ final class RepoSession: ObservableObject, Identifiable {
     // Working copy selection
     @Published var selectedChange: FileChange?
 
-    private var logGeneration = 0
     private var lastRefresh = Date.distantPast
     private var didRestoreSelection = false
 
@@ -564,10 +563,6 @@ final class RepoSession: ObservableObject, Identifiable {
         }
     }
 
-    func stashDiff(_ stash: Stash) async -> FileDiff? {
-        guard let commit = commits.first(where: { $0.hash == stash.hash }) else { return nil }
-        return try? await GitRepo.diff(forCommit: commit.hash, path: "", at: root)
-    }
 
     // MARK: - Conflicts
 

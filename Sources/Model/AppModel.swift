@@ -13,28 +13,9 @@ final class AppModel: ObservableObject {
     @Published var isAddingRepository = false
     @Published var showCloneSheet = false
     @Published var globalError: String?
-    @Published var sidebarSection: SidebarSection = .history
     @Published var showingSettings = false
     @Published var diffMode: DiffMode = .unified
     @Published var showSidebar = true
-    @Published var showDetail = true
-
-    enum SidebarSection: String, CaseIterable, Identifiable {
-        case history, changes, branches, stashes, worktrees, blame, reflog
-        var id: String { rawValue }
-        var title: String { rawValue.capitalized }
-        var icon: String {
-            switch self {
-            case .history: return "clock"
-            case .changes: return "square.and.pencil"
-            case .branches: return "arrow.triangle.branch"
-            case .stashes: return "tray.and.arrow.down"
-            case .worktrees: return "square.on.square"
-            case .blame: return "person.text.rectangle"
-            case .reflog: return "list.bullet.rectangle"
-            }
-        }
-    }
 
     enum DiffMode: String, CaseIterable, Identifiable {
         case unified, sideBySide
@@ -200,10 +181,4 @@ final class AppModel: ObservableObject {
         persist()
     }
 
-    func moveTab(from source: Int, to destination: Int) {
-        guard source != destination, tabs.indices.contains(source) else { return }
-        let item = tabs.remove(at: source)
-        tabs.insert(item, at: min(destination, tabs.count))
-        persist()
-    }
 }

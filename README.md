@@ -23,6 +23,12 @@ open build/GitScope.app
 
 首次启动后点击左下角 `Add` 或欢迎页的 `Open Repository`，选择仓库目录即可；也支持把文件夹直接拖进窗口。
 
+命令行也可以直接定位到某个提交（调试/脚本用）：
+
+```bash
+./build/GitScope.app/Contents/MacOS/GitScope --open /path/to/repo --select <commit-hash>
+```
+
 ## 功能
 
 **多仓库**

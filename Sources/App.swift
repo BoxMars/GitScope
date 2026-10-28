@@ -13,6 +13,7 @@ struct GitScopeApp: App {
                 .frame(minWidth: 1060, minHeight: 680)
         }
         .defaultSize(width: 1440, height: 880)
+        .defaultPosition(.center)
         .commands {
             AppCommands(app: app)
         }
@@ -67,11 +68,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             AppModel.shared.diffMode = .sideBySide
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-            for window in NSApp.windows where window.canBecomeMain {
-                window.collectionBehavior.insert(.moveToActiveSpace)
-                window.makeKeyAndOrderFront(nil)
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            NSApp.windows.first(where: { $0.canBecomeMain })?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
         }
     }

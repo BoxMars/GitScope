@@ -156,24 +156,6 @@ struct ToolbarButton: View {
     }
 }
 
-struct SectionLabel: View {
-    var title: String
-    var trailing: AnyView? = nil
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Text(title.uppercased())
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(Theme.secondaryText)
-                .tracking(0.5)
-            Spacer()
-            if let trailing { trailing }
-        }
-        .padding(.horizontal, 10)
-        .padding(.top, 10)
-        .padding(.bottom, 3)
-    }
-}
 
 struct Avatar: View {
     var name: String
