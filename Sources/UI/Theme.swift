@@ -48,8 +48,9 @@ enum Theme {
     /// App accent, pinned so the selection never turns grey when the system
     /// accent is graphite or the window is inactive.
     static let accent = Color(hex: 0x0A84FF)
-    /// Sidebar row selection: filled accent, like the system apps.
-    static let sidebarSelection = Color(hex: 0x0A84FF)
+    /// Sidebar row selection: a slightly softer blue than the full accent,
+    /// so a full-width pill doesn't read as a heavy block.
+    static let sidebarSelection = Color(hex: 0x4A9EFF)
 
     static func adaptive(light: UInt32, dark: UInt32) -> Color {
         Color(nsColor: NSColor(name: nil) { appearance in

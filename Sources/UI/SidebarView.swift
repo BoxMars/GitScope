@@ -118,7 +118,7 @@ private struct RepositoryRow: View {
                 if let branch = session.status.branch ?? session.currentBranch?.name {
                     Text(branch)
                         .font(.system(size: 10))
-                        .foregroundStyle(isActive ? Color.white.opacity(0.78) : Theme.secondaryText)
+                        .foregroundStyle(isActive ? Color.white.opacity(0.9) : Theme.secondaryText)
                         .lineLimit(1)
                 }
             }
@@ -201,7 +201,7 @@ struct SidebarRepoSections: View {
                     Spacer()
                     Text("\(session.commits.count)")
                         .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(isHistorySelected ? Color.white.opacity(0.75) : Color.secondary)
+                        .foregroundStyle(isHistorySelected ? Color.white.opacity(0.85) : Color.secondary)
                 }
                 .padding(.horizontal, 10)
                 .frame(maxWidth: .infinity)
@@ -469,7 +469,7 @@ struct SidebarRow: View {
             if let detail {
                 Text(detail)
                     .font(.system(size: 9.5, design: .monospaced))
-                    .foregroundStyle(isActive ? Color.white.opacity(0.7) : Color.secondary)
+                    .foregroundStyle(isActive ? Color.white.opacity(0.82) : Color.secondary)
                     .lineLimit(1)
             }
         }
