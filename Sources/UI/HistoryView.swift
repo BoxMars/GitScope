@@ -65,11 +65,12 @@ struct GraphCell: View {
         return max(1.6, min(Theme.laneWidth, maxWidth / CGFloat(laneCount)))
     }
 
-    private var nodeRadius: CGFloat { min(4, max(0.9, laneWidth * 0.34)) }
-    private var lineWidth: CGFloat { min(1.6, max(0.8, laneWidth * 0.14)) }
+    private var nodeRadius: CGFloat { simplified ? 4 : min(4, max(1, laneWidth * 0.34)) }
+    private var lineWidth: CGFloat { simplified ? 1.6 : min(1.6, max(0.9, laneWidth * 0.14)) }
 
     private func x(_ lane: Int) -> CGFloat {
-        laneWidth / 2 + CGFloat(max(lane, 0)) * laneWidth
+        let step = simplified ? Theme.laneWidth : laneWidth
+        return step / 2 + CGFloat(max(lane, 0)) * step
     }
 
     var body: some View {
