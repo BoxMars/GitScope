@@ -163,6 +163,10 @@ private struct RepositoryRow: View {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(repo.path, forType: .string)
             }
+            Button("Open in Split View") {
+                AppModel.shared.setSecondary(path: repo.path)
+            }
+            .disabled(isActive)
             Divider()
             Button("Remove from GitScope", role: .destructive) {
                 AppModel.shared.removeRepository(repo.path)

@@ -18,6 +18,9 @@ final class AppModel: ObservableObject {
         didSet { persist() }
     }
     @Published var showSidebar = true
+    @Published var secondaryPath: String? {
+        didSet { persist() }
+    }
     @Published var appearance: Appearance = .system {
         didSet { persist() }
     }
@@ -47,6 +50,29 @@ final class AppModel: ObservableObject {
         return sessions[activePath]
     }
 
+    var secondarySession: RepoSession? {
+        guard let secondaryPath, secondaryPath != activePath else { return nil }
+        return sessions[secondaryPath]
+    }
+
+    func setSecondary(path: String) {
+        guard path != activePath else { return }
+        _ = session(for: path)
+        secondaryPath = path
+    }
+
+    func closeSplit() {
+        secondaryPath = nil
+    }
+
+    func toggleSplit() {
+        if secondarySession != nil {
+            closeSplit()
+        } else if let candidate = repositories.first(where: { $0.path != activePath }) {
+            setSecondary(path: candidate.path)
+        }
+    }
+
     private var isLoadingPreferences = true
 
     init() {
@@ -64,6 +90,7 @@ final class AppModel: ObservableObject {
         static let diffMode = "gitscope.diffMode"
         static let showSidebar = "gitscope.showSidebar"
         static let appearance = "gitscope.appearance"
+        static let secondary = "gitscope.secondary"
     }
 
     private func loadPersisted() {
@@ -74,6 +101,11 @@ final class AppModel: ObservableObject {
         }
         tabs = defaults.stringArray(forKey: Keys.tabs) ?? []
         activePath = defaults.string(forKey: Keys.active)
+        if let secondary = defaults.string(forKey: Keys.secondary),
+           secondary != activePath,
+           repositories.contains(where: { $0.path == secondary }) {
+            secondaryPath = secondary
+        }
         if let raw = defaults.string(forKey: Keys.diffMode), let mode = DiffMode(rawValue: raw) {
             diffMode = mode
         }
@@ -98,6 +130,11 @@ final class AppModel: ObservableObject {
         defaults.set(activePath, forKey: Keys.active)
         defaults.set(diffMode.rawValue, forKey: Keys.diffMode)
         defaults.set(showSidebar, forKey: Keys.showSidebar)
+        if let secondaryPath {
+            defaults.set(secondaryPath, forKey: Keys.secondary)
+        } else {
+            defaults.removeObject(forKey: Keys.secondary)
+        }
         defaults.set(appearance.rawValue, forKey: Keys.appearance)
 
     }
@@ -220,6 +257,7 @@ final class AppModel: ObservableObject {
         sessions[path] = nil
         repositories.removeAll { $0.path == path }
         if activePath == path { activePath = nil }
+        if secondaryPath == path { secondaryPath = nil }
         persist()
     }
 

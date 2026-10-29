@@ -144,6 +144,12 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("d", modifiers: [.command, .option])
 
+            Button(app.secondarySession == nil ? "Split View" : "Close Split View") {
+                app.toggleSplit()
+            }
+            .keyboardShortcut("\\", modifiers: .command)
+            .disabled(app.activeSession == nil || app.repositories.count < 2)
+
             Divider()
         }
 

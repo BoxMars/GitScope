@@ -20,7 +20,14 @@ struct MainView: View {
 
                 VStack(spacing: 0) {
                     if let session = app.activeSession {
-                        RepoView(session: session)
+                        if let secondary = app.secondarySession {
+                            HSplitView {
+                                pane(session: session, isSecondary: false)
+                                pane(session: secondary, isSecondary: true)
+                            }
+                        } else {
+                            RepoView(session: session)
+                        }
                     } else {
                         WelcomeView()
                     }
@@ -54,7 +61,19 @@ struct MainView: View {
             if let session = app.activeSession {
                 Task { await session.refresh(force: false) }
             }
+            if let secondary = app.secondarySession {
+                Task { await secondary.refresh(force: false) }
+            }
         }
+    }
+
+    @ViewBuilder
+    private func pane(session: RepoSession, isSecondary: Bool) -> some View {
+        VStack(spacing: 0) {
+            PaneHeader(session: session, isSecondary: isSecondary)
+            RepoView(session: session, compact: true)
+        }
+        .frame(minWidth: 300)
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
@@ -70,12 +89,62 @@ struct MainView: View {
     }
 }
 
+private struct PaneHeader: View {
+    @EnvironmentObject var app: AppModel
+    @ObservedObject var session: RepoSession
+    var isSecondary: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(session.ref.name)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.primary)
+                .lineLimit(1)
+            if let branch = session.status.branch ?? session.currentBranch?.name {
+                Text(branch)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.secondaryText)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            if isSecondary {
+                Menu {
+                    ForEach(app.repositories) { repo in
+                        Button(repo.name) { app.setSecondary(path: repo.path) }
+                            .disabled(repo.path == app.activePath)
+                    }
+                } label: {
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 9))
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+
+                Button {
+                    app.closeSplit()
+                } label: {
+                    Image(systemName: "xmark").font(.system(size: 9))
+                }
+                .buttonStyle(.plain)
+                .help("Close split view")
+            }
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 26)
+        .background(Theme.contentBackground)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Theme.border).frame(height: 1)
+        }
+    }
+}
+
 struct RepoView: View {
     @EnvironmentObject var app: AppModel
     @ObservedObject var session: RepoSession
+    var compact: Bool = false
 
     var body: some View {
-        CanvasSplitView(initialWidth: 520) {
+        CanvasSplitView(initialWidth: compact ? 240 : 520) {
             leftPane
         } right: {
             detailPane
