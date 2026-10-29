@@ -195,7 +195,7 @@ struct RepoView: View {
         case .changes:
             ChangesListView(session: session)
         case .history:
-            HistoryListView(graphMaxWidth: compact ? 88 : 150, simplifiedGraph: false, linear: compact, session: session)
+            HistoryListView(graphMaxWidth: compact ? 88 : 150, simplifiedGraph: false, linear: compact, showsFilterChip: !compact, session: session)
         }
     }
 

@@ -177,7 +177,7 @@ struct CommitRowView: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .layoutPriority(1)
-                    ForEach(commit.refs.prefix(graphMaxWidth < 120 ? 1 : 2)) { ref in
+                    ForEach(commit.refs.prefix(graphMaxWidth < 120 ? 0 : 2)) { ref in
                         RefBadge(ref: ref)
                             .frame(maxWidth: graphMaxWidth < 120 ? 64 : 110, alignment: .leading)
                     }
@@ -215,6 +215,7 @@ struct HistoryListView: View {
     var graphMaxWidth: CGFloat = 150
     var simplifiedGraph: Bool = false
     var linear: Bool = false
+    var showsFilterChip: Bool = true
     @ObservedObject var session: RepoSession
     @State private var hoveredHash: String?
     @State private var branchSheet: BranchSheetMode?
@@ -352,7 +353,7 @@ struct HistoryListView: View {
                 .help("Clear search")
             }
 
-            if let ref = session.filterRef {
+            if let ref = session.filterRef, showsFilterChip {
                 HStack(spacing: 3) {
                     Image(systemName: "arrow.triangle.branch").font(.system(size: 9))
                     Text(ref).font(.system(size: 10, weight: .medium)).lineLimit(1)
