@@ -106,6 +106,7 @@ struct RefBadge: View {
             Text(ref.displayName)
                 .font(.system(size: 10, weight: .semibold))
                 .lineLimit(1)
+                .truncationMode(.tail)
         }
         .foregroundStyle(tint)
         .padding(.horizontal, 5)

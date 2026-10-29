@@ -55,16 +55,48 @@ struct GraphCell: View {
     var isMerge: Bool
     var laneCount: Int
     var height: CGFloat
+    var maxWidth: CGFloat = 150
+    var simplified: Bool = false
 
-    private static let maxLane = GraphLayout.maxVisibleLanes - 1
+    /// Shrink lanes to fit the available column instead of clamping them onto
+    /// the last lane (which drew every extra branch on top of each other).
+    private var laneWidth: CGFloat {
+        guard laneCount > 0 else { return Theme.laneWidth }
+        return max(1.6, min(Theme.laneWidth, maxWidth / CGFloat(laneCount)))
+    }
+
+    private var nodeRadius: CGFloat { min(4, max(0.9, laneWidth * 0.34)) }
+    private var lineWidth: CGFloat { min(1.6, max(0.8, laneWidth * 0.14)) }
 
     private func x(_ lane: Int) -> CGFloat {
-        Theme.laneWidth / 2 + CGFloat(min(max(lane, 0), Self.maxLane)) * Theme.laneWidth
+        laneWidth / 2 + CGFloat(max(lane, 0)) * laneWidth
     }
 
     var body: some View {
         Canvas { context, size in
             let nodeY = size.height / 2
+            if simplified {
+                if row.hasIncoming {
+                    var path = Path()
+                    path.move(to: CGPoint(x: x(0), y: 0))
+                    path.addLine(to: CGPoint(x: x(0), y: nodeY - nodeRadius))
+                    context.stroke(path, with: .color(Theme.graphColor(row.color).opacity(0.9)), lineWidth: lineWidth)
+                }
+                if row.continuesDown {
+                    var path = Path()
+                    path.move(to: CGPoint(x: x(0), y: nodeY + nodeRadius))
+                    path.addLine(to: CGPoint(x: x(0), y: size.height))
+                    context.stroke(path, with: .color(Theme.graphColor(row.color).opacity(0.9)), lineWidth: lineWidth)
+                }
+                let rect = CGRect(x: x(0) - nodeRadius, y: nodeY - nodeRadius, width: nodeRadius * 2, height: nodeRadius * 2)
+                if isMerge {
+                    context.fill(Path(ellipseIn: rect), with: .color(Theme.contentBackground))
+                    context.stroke(Path(ellipseIn: rect), with: .color(Theme.graphColor(row.color)), lineWidth: max(1, lineWidth + 0.2))
+                } else {
+                    context.fill(Path(ellipseIn: rect), with: .color(Theme.graphColor(row.color)))
+                }
+                return
+            }
             func curve(from p0: CGPoint, to p1: CGPoint) -> Path {
                 var path = Path()
                 path.move(to: p0)
@@ -79,46 +111,46 @@ struct GraphCell: View {
                 var path = Path()
                 path.move(to: CGPoint(x: x(row.lane), y: 0))
                 path.addLine(to: CGPoint(x: x(row.lane), y: nodeY - 4))
-                context.stroke(path, with: .color(Theme.graphColor(row.color).opacity(0.9)), lineWidth: 1.6)
+                context.stroke(path, with: .color(Theme.graphColor(row.color).opacity(0.9)), lineWidth: lineWidth)
             }
 
             if row.continuesDown {
                 var path = Path()
                 path.move(to: CGPoint(x: x(row.lane), y: nodeY + 4))
                 path.addLine(to: CGPoint(x: x(row.lane), y: size.height))
-                context.stroke(path, with: .color(Theme.graphColor(row.color).opacity(0.9)), lineWidth: 1.6)
+                context.stroke(path, with: .color(Theme.graphColor(row.color).opacity(0.9)), lineWidth: lineWidth)
             }
 
             for lane in row.through {
                 var path = Path()
                 path.move(to: CGPoint(x: x(lane.lane), y: 0))
                 path.addLine(to: CGPoint(x: x(lane.lane), y: size.height))
-                context.stroke(path, with: .color(Theme.graphColor(lane.color).opacity(0.9)), lineWidth: 1.6)
+                context.stroke(path, with: .color(Theme.graphColor(lane.color).opacity(0.9)), lineWidth: lineWidth)
             }
 
             for lane in row.incoming {
                 let path = curve(from: CGPoint(x: x(lane.lane), y: 0),
                                  to: CGPoint(x: x(row.lane), y: nodeY))
-                context.stroke(path, with: .color(Theme.graphColor(lane.color)), lineWidth: 1.6)
+                context.stroke(path, with: .color(Theme.graphColor(lane.color)), lineWidth: lineWidth)
             }
 
             for lane in row.outgoing {
                 let path = curve(from: CGPoint(x: x(row.lane), y: nodeY),
                                  to: CGPoint(x: x(lane.lane), y: size.height))
-                context.stroke(path, with: .color(Theme.graphColor(lane.color)), lineWidth: 1.6)
+                context.stroke(path, with: .color(Theme.graphColor(lane.color)), lineWidth: lineWidth)
             }
 
             if isMerge {
-                let rect = CGRect(x: x(row.lane) - 4, y: nodeY - 4, width: 8, height: 8)
+                let rect = CGRect(x: x(row.lane) - nodeRadius, y: nodeY - nodeRadius, width: nodeRadius * 2, height: nodeRadius * 2)
                 context.fill(Path(ellipseIn: rect), with: .color(Theme.contentBackground))
-                context.stroke(Path(ellipseIn: rect), with: .color(Theme.graphColor(row.color)), lineWidth: 2)
+                context.stroke(Path(ellipseIn: rect), with: .color(Theme.graphColor(row.color)), lineWidth: max(1, lineWidth + 0.2))
             } else {
-                let rect = CGRect(x: x(row.lane) - 4, y: nodeY - 4, width: 8, height: 8)
+                let rect = CGRect(x: x(row.lane) - nodeRadius, y: nodeY - nodeRadius, width: nodeRadius * 2, height: nodeRadius * 2)
                 context.fill(Path(ellipseIn: rect), with: .color(Theme.graphColor(row.color)))
-                context.stroke(Path(ellipseIn: rect), with: .color(Theme.graphColor(row.color)), lineWidth: 1)
+                context.stroke(Path(ellipseIn: rect), with: .color(Theme.graphColor(row.color)), lineWidth: max(0.8, lineWidth * 0.6))
             }
         }
-        .frame(width: max(CGFloat(min(laneCount, GraphLayout.maxVisibleLanes)) * Theme.laneWidth, Theme.laneWidth), height: height)
+        .frame(width: simplified ? Theme.laneWidth : max(laneWidth * CGFloat(max(laneCount, 1)), Theme.laneWidth), height: height)
     }
 }
 
@@ -128,11 +160,13 @@ struct CommitRowView: View {
     var laneCount: Int
     var isSelected: Bool
     var isHighlighted: Bool
+    var graphMaxWidth: CGFloat = 150
+    var simplifiedGraph: Bool = false
 
     var body: some View {
         HStack(spacing: 8) {
             if let row {
-                GraphCell(row: row, isMerge: commit.isMerge, laneCount: laneCount, height: Theme.commitRowHeight)
+                GraphCell(row: row, isMerge: commit.isMerge, laneCount: laneCount, height: Theme.commitRowHeight, maxWidth: graphMaxWidth, simplified: simplifiedGraph)
             }
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
@@ -141,14 +175,16 @@ struct CommitRowView: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .layoutPriority(1)
-                    ForEach(commit.refs.prefix(2)) { ref in
-                        RefBadge(ref: ref).fixedSize()
+                    ForEach(commit.refs.prefix(graphMaxWidth < 120 ? 1 : 2)) { ref in
+                        RefBadge(ref: ref)
+                            .frame(maxWidth: graphMaxWidth < 120 ? 64 : 110, alignment: .leading)
                     }
                     Spacer(minLength: 0)
                 }
                 HStack(spacing: 5) {
                     Text(commit.author)
                         .lineLimit(1)
+                        .truncationMode(.tail)
                     Text("·")
                     Text(commit.relativeAuthorDate)
                     Text("·")
@@ -157,9 +193,11 @@ struct CommitRowView: View {
                 }
                 .font(.system(size: 10.5))
                 .foregroundStyle(Theme.secondaryText)
+                .lineLimit(1)
             }
             Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.trailing, 8)
         .frame(height: Theme.commitRowHeight)
         .background(
@@ -172,6 +210,8 @@ struct CommitRowView: View {
 }
 
 struct HistoryListView: View {
+    var graphMaxWidth: CGFloat = 150
+    var simplifiedGraph: Bool = false
     @ObservedObject var session: RepoSession
     @State private var hoveredHash: String?
     @State private var branchSheet: BranchSheetMode?
@@ -203,13 +243,15 @@ struct HistoryListView: View {
             } else {
                 ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 0) {
+                    LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(session.displayCommits.enumerated()), id: \.element.id) { index, commit in
                             CommitRowView(commit: commit,
                                           row: session.graph.rows[commit.hash],
                                           laneCount: session.graph.laneCount,
                                           isSelected: session.selection == .commit(commit.hash),
-                                          isHighlighted: hoveredHash == commit.hash)
+                                          isHighlighted: hoveredHash == commit.hash,
+                                          graphMaxWidth: graphMaxWidth,
+                                          simplifiedGraph: simplifiedGraph)
                                 .onHover { hovering in
                                     hoveredHash = hovering ? commit.hash : (hoveredHash == commit.hash ? nil : hoveredHash)
                                 }
