@@ -59,6 +59,17 @@ final class AppModel: ObservableObject {
         guard path != activePath else { return }
         _ = session(for: path)
         secondaryPath = path
+        if let session = sessions[path] { filterToCurrentBranch(session) }
+        if let session = activeSession { filterToCurrentBranch(session) }
+    }
+
+    private func filterToCurrentBranch(_ session: RepoSession) {
+        guard session.filterRef == nil else { return }
+        Task {
+            if session.currentBranch == nil { await session.refresh(force: false) }
+            guard session.filterRef == nil, let branch = session.currentBranch?.name else { return }
+            await session.setFilterRef(branch)
+        }
     }
 
     func closeSplit() {
@@ -79,6 +90,10 @@ final class AppModel: ObservableObject {
         loadPersisted()
         restoreTabs()
         isLoadingPreferences = false
+        if secondaryPath != nil {
+            if let session = activeSession { filterToCurrentBranch(session) }
+            if let session = secondarySession { filterToCurrentBranch(session) }
+        }
     }
 
     // MARK: - Persistence

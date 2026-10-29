@@ -163,10 +163,11 @@ struct CommitRowView: View {
     var isHighlighted: Bool
     var graphMaxWidth: CGFloat = 150
     var simplifiedGraph: Bool = false
+    var linear: Bool = false
 
     var body: some View {
         HStack(spacing: 8) {
-            if let row {
+            if let row, !linear {
                 GraphCell(row: row, isMerge: commit.isMerge, laneCount: laneCount, height: Theme.commitRowHeight, maxWidth: graphMaxWidth, simplified: simplifiedGraph)
             }
             VStack(alignment: .leading, spacing: 2) {
@@ -213,6 +214,7 @@ struct CommitRowView: View {
 struct HistoryListView: View {
     var graphMaxWidth: CGFloat = 150
     var simplifiedGraph: Bool = false
+    var linear: Bool = false
     @ObservedObject var session: RepoSession
     @State private var hoveredHash: String?
     @State private var branchSheet: BranchSheetMode?
@@ -252,7 +254,8 @@ struct HistoryListView: View {
                                           isSelected: session.selection == .commit(commit.hash),
                                           isHighlighted: hoveredHash == commit.hash,
                                           graphMaxWidth: graphMaxWidth,
-                                          simplifiedGraph: simplifiedGraph)
+                                          simplifiedGraph: simplifiedGraph,
+                                          linear: linear)
                                 .onHover { hovering in
                                     hoveredHash = hovering ? commit.hash : (hoveredHash == commit.hash ? nil : hoveredHash)
                                 }

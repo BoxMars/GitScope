@@ -100,12 +100,33 @@ private struct PaneHeader: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.primary)
                 .lineLimit(1)
-            if let branch = session.status.branch ?? session.currentBranch?.name {
-                Text(branch)
-                    .font(.system(size: 10))
-                    .foregroundStyle(Theme.secondaryText)
-                    .lineLimit(1)
+            Menu {
+                Button("All branches") {
+                    Task { await session.setFilterRef(nil) }
+                }
+                Divider()
+                ForEach(session.localBranches) { branch in
+                    Button(branch.name) {
+                        Task {
+                            session.setMode(.history)
+                            await session.setFilterRef(branch.name)
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 3) {
+                    Text(session.filterRef ?? session.status.branch ?? session.currentBranch?.name ?? "All branches")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.secondaryText)
+                        .lineLimit(1)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 7))
+                        .foregroundStyle(Theme.secondaryText)
+                }
             }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
             Spacer(minLength: 4)
             if isSecondary {
                 Menu {
@@ -174,7 +195,7 @@ struct RepoView: View {
         case .changes:
             ChangesListView(session: session)
         case .history:
-            HistoryListView(graphMaxWidth: compact ? 88 : 150, simplifiedGraph: compact && session.graph.laneCount > 10, session: session)
+            HistoryListView(graphMaxWidth: compact ? 88 : 150, simplifiedGraph: false, linear: compact, session: session)
         }
     }
 
