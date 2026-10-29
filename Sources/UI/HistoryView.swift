@@ -199,6 +199,7 @@ struct CommitRowView: View {
             }
             Spacer(minLength: 0)
         }
+        .padding(.leading, 10)
         .padding(.trailing, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: Theme.commitRowHeight)
