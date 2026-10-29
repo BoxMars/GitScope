@@ -199,14 +199,10 @@ struct CommitRowView: View {
             }
             Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.trailing, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: Theme.commitRowHeight)
-        .background(
-            RoundedRectangle(cornerRadius: 5)
-                .fill(isSelected ? Theme.selectionBackground : (isHighlighted ? Color.primary.opacity(0.05) : Color.clear))
-                .padding(.horizontal, 2)
-        )
+        .background(isSelected ? Theme.selectionBackground : (isHighlighted ? Color.primary.opacity(0.04) : Color.clear))
         .contentShape(Rectangle())
     }
 }
