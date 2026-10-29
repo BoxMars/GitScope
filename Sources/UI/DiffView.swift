@@ -280,7 +280,7 @@ private struct UnifiedLineRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 0) {
             Text(line.oldNumber.map(String.init) ?? "")
                 .frame(width: 42, alignment: .trailing)
                 .padding(.trailing, 6)
@@ -293,15 +293,14 @@ private struct UnifiedLineRow: View {
                 .frame(width: 14)
                 .foregroundStyle(markerColor)
             Text(SyntaxColors.attributed(line.text.isEmpty ? " " : line.text, family: language))
-                .lineLimit(1)
-                .truncationMode(.tail)
                 .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.trailing, 8)
         }
         .font(.system(size: 11.5, design: .monospaced))
         .foregroundStyle(Theme.adaptive(light: 0x6B6B72, dark: 0x8A8A90))
-        .frame(height: 19)
+        .frame(minHeight: 19, alignment: .top)
         .background(background)
     }
 }
@@ -317,7 +316,7 @@ private struct SideBySideRowView: View {
             cell(number: row.rightNumber, text: row.rightText, side: .right)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 19)
+        .frame(minHeight: 19, alignment: .top)
     }
 
     private enum Side { case left, right }
@@ -338,22 +337,20 @@ private struct SideBySideRowView: View {
             default: return .clear
             }
         }()
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 0) {
             Text(number.map(String.init) ?? "")
                 .frame(width: 38, alignment: .trailing)
                 .padding(.trailing, 5)
                 .foregroundStyle(.tertiary)
                 .background(gutter)
             Text(text.map { SyntaxColors.attributed($0.isEmpty ? " " : $0, family: language) } ?? AttributedString(""))
-                .lineLimit(1)
-                .truncationMode(.tail)
                 .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.trailing, 6)
         }
         .font(.system(size: 11.5, design: .monospaced))
         .frame(maxWidth: .infinity, alignment: .leading)
-        .clipped()
         .background(background)
     }
 }

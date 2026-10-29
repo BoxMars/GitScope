@@ -31,19 +31,18 @@ struct CodeView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                            HStack(spacing: 0) {
+                            HStack(alignment: .top, spacing: 0) {
                                 Text("\(index + 1)")
                                     .frame(width: 44, alignment: .trailing)
                                     .padding(.trailing, 8)
                                     .foregroundStyle(.tertiary)
                                 Text(SyntaxColors.attributed(line.isEmpty ? " " : line, family: language))
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
+                                    .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.trailing, 8)
                             }
                             .font(.system(size: 11.5, design: .monospaced))
-                            .frame(height: 19)
+                            .frame(minHeight: 19, alignment: .top)
                         }
                     }
                     .padding(.vertical, 4)
