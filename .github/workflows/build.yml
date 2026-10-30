@@ -1,0 +1,54 @@
+name: build
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: ./scripts/build.sh release
+
+      - name: Package
+        id: package
+        run: |
+          set -euo pipefail
+          VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" build/GitScope.app/Contents/Info.plist)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          mkdir -p dist
+          ditto -c -k --keepParent build/GitScope.app "dist/GitScope-${VERSION}-mac-arm64.zip"
+          STAGE=$(mktemp -d)
+          cp -R build/GitScope.app "$STAGE/"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname "GitScope ${VERSION}" -srcfolder "$STAGE" -ov -format UDZO "dist/GitScope-${VERSION}.dmg"
+          (cd dist && shasum -a 256 GitScope-* > SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GitScope-${{ steps.package.outputs.version }}
+          path: dist/*
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: GitScope ${{ steps.package.outputs.version }}
+          draft: false
+          body: |
+            macOS native Git client.
+
+            Download the DMG (drag GitScope into Applications) or the ZIP.
+            Unsigned build: right-click the app, then Open.
+            macOS 14+, Apple Silicon.
+          files: |
+            dist/*.zip
+            dist/*.dmg
+            dist/SHA256SUMS.txt
