@@ -16,6 +16,21 @@ struct WindowChromeConfigurator: NSViewRepresentable {
             window.styleMask.insert(.fullSizeContentView)
             window.isOpaque = true
             window.backgroundColor = .windowBackgroundColor
+            // If the saved frame lands on a display that is gone, bring the
+            // window back onto a visible screen.
+            let visible = NSScreen.screens.contains {
+                $0.visibleFrame.intersects(window.frame.insetBy(dx: 40, dy: 40))
+            }
+            if !visible, let screen = NSScreen.main {
+                var frame = window.frame
+                frame.size.width = min(frame.width, screen.visibleFrame.width - 80)
+                frame.size.height = min(frame.height, screen.visibleFrame.height - 80)
+                frame.origin = CGPoint(
+                    x: screen.visibleFrame.midX - frame.width / 2,
+                    y: screen.visibleFrame.midY - frame.height / 2
+                )
+                window.setFrame(frame, display: true)
+            }
             Self.apply(appearance, to: window)
         }
         return view

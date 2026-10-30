@@ -77,6 +77,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.windows.first(where: { $0.canBecomeMain })?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
         }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            self?.ensureWindowVisible()
+        }
+    }
+
+    /// Restored window frames can point at a display that is no longer
+    /// connected (or a stale full-screen space). Pull the window back.
+    private func ensureWindowVisible() {
+        guard let window = NSApp.windows.first(where: { $0.canBecomeMain && !$0.isSheet }) else { return }
+        window.isRestorable = false
+        guard let primary = NSScreen.screens.first ?? NSScreen.main else { return }
+        let probe = window.frame.insetBy(dx: 40, dy: 40)
+        // Open on the display the pointer is on; restored frames from a
+        // display that is now asleep/disconnected can be unreachable.
+        let pointer = NSEvent.mouseLocation
+        let target = NSScreen.screens.first { $0.frame.contains(pointer) } ?? primary
+        let onTarget = target.visibleFrame.intersects(probe)
+        let wasFullScreen = window.styleMask.contains(.fullScreen)
+        if onTarget { return }
+
+        if wasFullScreen {
+            window.toggleFullScreen(nil)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + (wasFullScreen ? 1.0 : 0.05)) {
+            let screen = target
+            let width = min(1440, screen.visibleFrame.width - 80)
+            let height = min(880, screen.visibleFrame.height - 80)
+            let frame = CGRect(x: screen.visibleFrame.midX - width / 2,
+                               y: screen.visibleFrame.midY - height / 2,
+                               width: width, height: height)
+            window.setFrame(frame, display: true)
+            window.makeKeyAndOrderFront(nil)
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
