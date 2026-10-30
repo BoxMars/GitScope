@@ -42,8 +42,8 @@ func render(to path: String) {
                           colors: [color(0xFFFFFF, 0.22), color(0xFFFFFF, 0)] as CFArray,
                           locations: [0, 1])!
     ctx.drawRadialGradient(glow,
-                           startCenter: CGPoint(x: 400, y: 800), startRadius: 0,
-                           endCenter: CGPoint(x: 400, y: 800), endRadius: 620,
+                           startCenter: CGPoint(x: 512, y: 860), startRadius: 0,
+                           endCenter: CGPoint(x: 512, y: 860), endRadius: 640,
                            options: [])
 
     // Inner rim
@@ -82,33 +82,33 @@ func render(to path: String) {
     ctx.setStrokeColor(color(0xFFFFFF, 0.96))
     ctx.setLineWidth(17)
 
-    ctx.move(to: p(404, 344))
-    ctx.addLine(to: p(404, 470))
+    ctx.move(to: p(420, 360))
+    ctx.addLine(to: p(420, 482))
     ctx.strokePath()
-    ctx.move(to: p(404, 530))
-    ctx.addLine(to: p(404, 664))
+    ctx.move(to: p(420, 542))
+    ctx.addLine(to: p(420, 664))
     ctx.strokePath()
 
-    ctx.move(to: p(434, 500))
-    ctx.addCurve(to: p(630, 640),
-                 control1: p(528, 500),
-                 control2: p(630, 556))
+    ctx.move(to: p(450, 512))
+    ctx.addCurve(to: p(604, 604),
+                 control1: p(522, 512),
+                 control2: p(604, 548))
     ctx.strokePath()
 
     // Nodes
-    for y in [344.0, 664.0] {
+    for y in [360.0, 664.0] {
         let r: CGFloat = 29
         ctx.setFillColor(color(0xFFFFFF))
-        ctx.fillEllipse(in: CGRect(x: 404 - r, y: 1024 - y - r, width: r * 2, height: r * 2))
+        ctx.fillEllipse(in: CGRect(x: 420 - r, y: 1024 - y - r, width: r * 2, height: r * 2))
     }
     do {
         let r: CGFloat = 29
-        ctx.fillEllipse(in: CGRect(x: 630 - r, y: 1024 - 640 - r, width: r * 2, height: r * 2))
+        ctx.fillEllipse(in: CGRect(x: 604 - r, y: 1024 - 604 - r, width: r * 2, height: r * 2))
     }
     // Merge node: open ring, gradient shows through
     do {
         let r: CGFloat = 30
-        let c = p(404, 500)
+        let c = p(420, 512)
         ctx.setStrokeColor(color(0xFFFFFF))
         ctx.setLineWidth(15)
         ctx.strokeEllipse(in: CGRect(x: c.x - r + 7.5, y: c.y - r + 7.5, width: (r - 7.5) * 2, height: (r - 7.5) * 2))
